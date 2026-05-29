@@ -3,31 +3,31 @@
  * Plugin Name:       Enamel Reviews Feed
  * Plugin URI:        https://enameldentistry.com
  * Description:       Fetches Google Places reviews for all Enamel studios once daily and writes static JSON feeds consumed by the patient reviews Elementor widget. No client-side API key exposure.
- * Version:           1.1.1
+ * Version:           1.1.2
  * Author:            Enamel Dentistry
  * License:           Proprietary
  * Text Domain:       enamel-reviews-feed
- *
  * Update URI:        https://github.com/drharcho/enamel-reviews-feed
- * GitHub Plugin URI: drharcho/enamel-reviews-feed
- * Primary Branch:    main
  *
  * ---------------------------------------------------------------------------
  * UPDATING THIS PLUGIN  (see RELEASING.md for the full flow)
  * ---------------------------------------------------------------------------
- * Once Git Updater is installed on the site, you NEVER upload a ZIP again.
- * To ship a change:
- *   1. Edit code locally, commit, push to GitHub `main`.
+ * This plugin self-updates from its GitHub releases — same mechanism as the
+ * Enamel Store Locator and Enamel Insurance Form plugins. No helper plugin
+ * (e.g. Git Updater) is required. To ship a change:
+ *   1. Edit code locally, commit, push to GitHub.
  *   2. Bump BOTH the "Version:" header above AND the ERF_VERSION constant
  *      below to the same new number (they MUST match — see erf_version_guard).
- *   3. Tag the release:  git tag v1.0.1 && git push --tags
- *   4. In WP Admin the plugin shows "Update Available" → click Update Now.
+ *   3. Cut a release:  git tag v1.1.3 && git push --tags
+ *                      gh release create v1.1.3 enamel-reviews-feed.zip
+ *   4. Within ~12h (or immediately on Dashboard → Updates → Check Again) WP
+ *      shows "Update Available" → click Update Now. See erf_check_for_update.
  * ---------------------------------------------------------------------------
  */
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ERF_VERSION',  '1.1.1' );
+define( 'ERF_VERSION',  '1.1.2' );
 define( 'ERF_DIR',      plugin_dir_path( __FILE__ ) );
 define( 'ERF_URL',      plugin_dir_url( __FILE__ ) );
 define( 'ERF_FEED_DIR', WP_CONTENT_DIR . '/uploads/enamel/' );
@@ -212,4 +212,84 @@ function erf_maybe_handle_server_cron() {
     header( 'Content-Type: text/plain' );
     echo 'ok: ' . esc_html( get_option( 'erf_last_fetch_status', '' ) );
     exit;
+}
+
+/* ------------------------------------------------------------------
+ * Self-updater — checks GitHub releases for new versions.
+ * Same mechanism used by Enamel Store Locator & Enamel Insurance Form.
+ * No helper plugin (Git Updater) required: WordPress shows the update
+ * in Dashboard → Updates / Plugins, and Update Now pulls the release zip.
+ * ------------------------------------------------------------------ */
+
+add_filter( 'pre_set_site_transient_update_plugins', 'erf_check_for_update' );
+function erf_check_for_update( $transient ) {
+    if ( empty( $transient->checked ) ) {
+        return $transient;
+    }
+
+    $plugin_slug = plugin_basename( __FILE__ );
+    $api_url     = 'https://api.github.com/repos/drharcho/enamel-reviews-feed/releases/latest';
+
+    $response = wp_remote_get( $api_url, [
+        'headers' => [
+            'Accept'     => 'application/vnd.github+json',
+            'User-Agent' => 'WordPress/' . get_bloginfo( 'version' ),
+        ],
+        'timeout' => 10,
+    ] );
+
+    if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
+        return $transient;
+    }
+
+    $release = json_decode( wp_remote_retrieve_body( $response ), true );
+    if ( empty( $release['tag_name'] ) ) {
+        return $transient;
+    }
+
+    $latest_version = ltrim( $release['tag_name'], 'v' );
+
+    if ( version_compare( $latest_version, ERF_VERSION, '>' ) ) {
+        // Prefer the uploaded .zip asset (correct folder structure); fall
+        // back to GitHub's auto-generated zipball.
+        $package = $release['zipball_url'];
+        if ( ! empty( $release['assets'] ) ) {
+            foreach ( $release['assets'] as $asset ) {
+                if ( pathinfo( $asset['name'], PATHINFO_EXTENSION ) === 'zip' ) {
+                    $package = $asset['browser_download_url'];
+                    break;
+                }
+            }
+        }
+
+        $transient->response[ $plugin_slug ] = (object) [
+            'slug'        => dirname( $plugin_slug ),
+            'plugin'      => $plugin_slug,
+            'new_version' => $latest_version,
+            'url'         => 'https://github.com/drharcho/enamel-reviews-feed',
+            'package'     => $package,
+        ];
+    }
+
+    return $transient;
+}
+
+// Fix the folder name when WordPress installs an update from a GitHub zip
+// (GitHub zips extract to a versioned folder; rename to the plugin slug).
+add_filter( 'upgrader_source_selection', 'erf_fix_update_folder', 10, 4 );
+function erf_fix_update_folder( $source, $remote_source, $upgrader, $extra ) {
+    if ( ! isset( $extra['plugin'] ) || strpos( $extra['plugin'], 'enamel-reviews-feed' ) === false ) {
+        return $source;
+    }
+
+    $correct = trailingslashit( $remote_source ) . 'enamel-reviews-feed/';
+
+    if ( $source !== $correct ) {
+        global $wp_filesystem;
+        if ( $wp_filesystem->move( $source, $correct ) ) {
+            return $correct;
+        }
+    }
+
+    return $source;
 }
