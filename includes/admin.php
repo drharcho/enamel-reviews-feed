@@ -39,6 +39,10 @@ function erf_admin_init() {
         'sanitize_callback' => 'sanitize_text_field',
         'default'           => '',
     ] );
+    register_setting( 'erf_filters_group', 'erf_filters', [
+        'sanitize_callback' => 'erf_sanitize_filters',
+        'default'           => erf_get_filter_defaults(),
+    ] );
 }
 
 function erf_admin_fetch_now() {
@@ -184,7 +188,44 @@ function erf_admin_page() {
 
         <hr>
 
-        <h2 class="title">5. Feed File URLs</h2>
+        <h2 class="title">5. Display Filters</h2>
+        <p>Tune which reviews are eligible to show. Changes take effect on the next page load — no re-fetch needed.</p>
+        <?php $filters = erf_get_filters(); ?>
+        <form method="post" action="options.php">
+            <?php settings_fields( 'erf_filters_group' ); ?>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row"><label for="erf_minRating">Minimum star rating</label></th>
+                    <td>
+                        <input type="number" id="erf_minRating" name="erf_filters[minRating]" value="<?php echo esc_attr( $filters['minRating'] ); ?>" min="1" max="5" step="1" class="small-text">
+                        <p class="description">Hide any review below this many stars. Default <code>4</code> — we curate, we don't lie.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="erf_minLength">Minimum review length</label></th>
+                    <td>
+                        <input type="number" id="erf_minLength" name="erf_filters[minLength]" value="<?php echo esc_attr( $filters['minLength'] ); ?>" min="0" max="500" step="5" class="small-text"> characters
+                        <p class="description">Skip terse reviews like "Great!" so cards have substance. Default <code>60</code>.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="erf_maxReviews">Mini cards shown</label></th>
+                    <td>
+                        <input type="number" id="erf_maxReviews" name="erf_filters[maxReviews]" value="<?php echo esc_attr( $filters['maxReviews'] ); ?>" min="1" max="4" step="1" class="small-text">
+                        <p class="description">
+                            Number of smaller cards below the featured one (1–4). Capped at <strong>4</strong>:
+                            Google returns at most 5 reviews per studio, and the grid is built for a clean 4-up row.
+                            The featured postcard is always shown and isn't counted here.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+            <?php submit_button( 'Save Filters' ); ?>
+        </form>
+
+        <hr>
+
+        <h2 class="title">6. Feed File URLs</h2>
         <p>The plugin writes these JSON files for the widget to consume. They update once a day after the cron runs.</p>
         <table class="widefat striped" style="max-width:900px;">
             <thead><tr><th>Context</th><th>data-location value</th><th>Feed URL</th><th>File exists?</th></tr></thead>
@@ -212,7 +253,7 @@ function erf_admin_page() {
 
         <hr>
 
-        <h2 class="title">6. Cloudways Cron Note</h2>
+        <h2 class="title">7. Cloudways Cron Note</h2>
         <p>WP-Cron only fires when someone loads a page. For a guaranteed daily run, add this in <strong>Cloudways → Application → Cron Job Manager</strong>:</p>
         <pre style="background:#f0f0f1;padding:12px;max-width:780px;overflow:auto;">0 3 * * * wget -q -O /dev/null "<?php echo esc_url( site_url( '/?erf_cron_key=' . wp_hash( 'erf_cron' ) ) ); ?>" &gt;/dev/null 2&gt;&amp;1</pre>
         <p>Then add <code>define( 'DISABLE_WP_CRON', true );</code> to <code>wp-config.php</code>.</p>

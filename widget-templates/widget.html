@@ -126,17 +126,29 @@
       var h2  = root.querySelector('h2[id]');
       if (h2) { h2.id = uid; root.setAttribute('aria-labelledby', uid); }
 
-      // 4) Fetch reviews from the right per-location JSON
+      // 4) Read live-editable display filters (injected by the plugin).
+      //    Falls back to sane defaults if the settings object is absent
+      //    (e.g. in the standalone dev preview).
+      var s = window.ENAMEL_REVIEWS_SETTINGS || {};
+      var minRating  = (typeof s.minRating  === 'number') ? s.minRating  : 4;
+      var minLength  = (typeof s.minLength  === 'number') ? s.minLength  : 60;
+      var maxReviews = (typeof s.maxReviews === 'number') ? s.maxReviews : 4;
+      maxReviews = Math.min(4, Math.max(1, maxReviews)); // clamp to the grid's supported range
+
+      // 5) Fetch reviews from the right per-location JSON
       window.EnamelReviews.load({
         source:      'static',
         feedUrl:     cfg.feedUrl,
-        maxReviews:  4,
+        minRating:   minRating,
+        minLength:   minLength,
+        maxReviews:  maxReviews,
         maxFeatured: 1
-      }).then(function (payload) { bindPayload(root, payload); });
+      }).then(function (payload) { bindPayload(root, payload, maxReviews); });
     });
   }
 
-  function bindPayload(root, payload) {
+  function bindPayload(root, payload, maxReviews) {
+    maxReviews = maxReviews || 4;
     var aggregate = payload.aggregate;
     var featured  = payload.featured;
     var reviews   = payload.reviews;
@@ -169,9 +181,13 @@
     var statStars = root.querySelector('.ed-rv__statline .ed-rv-stars');
     if (statStars) statStars.setAttribute('aria-label', aggregate.rating + ' out of 5 average rating');
 
-    // 4-up mini grid (4 cards = the Google Places per-place max)
+    // Mini grid — render up to maxReviews cards (admin-configurable, 1–4).
+    // Drive the desktop column count off the actual rendered count so the row
+    // always fills cleanly with no orphan/empty cells.
     var grid = root.querySelector('[data-role="grid"]');
-    grid.innerHTML = reviews.slice(0, 4).map(function (r) {
+    var shown = reviews.slice(0, maxReviews);
+    grid.style.setProperty('--ed-cols', Math.min(4, Math.max(1, shown.length)));
+    grid.innerHTML = shown.map(function (r) {
       return '<div class="ed-rv__mini" role="listitem">'
         + '<div class="ed-rv-stars" role="img" aria-label="' + r.rating + ' out of 5 stars">' + fmt.stars(r.rating) + '</div>'
         + '<p class="ed-rv__mini-text">' + esc(fmt.truncate(r.text, 140)) + '</p>'

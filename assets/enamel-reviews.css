@@ -309,7 +309,9 @@
   grid-column: 1 / -1;
   grid-row: 2;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* --ed-cols is set by the widget JS to the actual rendered card count
+     (1–4) so the desktop row always fills cleanly. Falls back to 4. */
+  grid-template-columns: repeat(var(--ed-cols, 4), 1fr);
   gap: 18px;
   margin-top: 8px;
 }

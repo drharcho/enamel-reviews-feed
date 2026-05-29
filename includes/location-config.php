@@ -165,3 +165,50 @@ function erf_get_generic() {
     }
     return $defaults;
 }
+
+/* ---------------------------------------------------------------------------
+ * Display filters (the "what shows" knobs) — live-editable in WP Admin.
+ *
+ * These are applied CLIENT-SIDE by enamel-reviews-api.js _buildPayload(), so a
+ * change takes effect on the next page load — no re-fetch, no redeploy. They
+ * are injected to the browser as window.ENAMEL_REVIEWS_SETTINGS.
+ *
+ *   minRating   1-5   Hide any review below N stars (curating, not lying).
+ *   minLength   chars Skip terse "Great!" reviews so the grid has substance.
+ *   maxReviews  1-4   Mini cards shown after the featured one. Capped at 4:
+ *                     Google returns max 5 reviews per studio (1 featured +
+ *                     4 mini), and the grid is designed for a clean 4-up row.
+ *
+ * maxFeatured is intentionally NOT exposed — it's fixed at 1 (the single
+ * postcard hero is core to the design).
+ * --------------------------------------------------------------------------- */
+function erf_get_filter_defaults() {
+    return [
+        'minRating'  => 4,
+        'minLength'  => 60,
+        'maxReviews' => 4,
+    ];
+}
+
+function erf_get_filters() {
+    $defaults = erf_get_filter_defaults();
+    $saved    = get_option( 'erf_filters', [] );
+    if ( ! is_array( $saved ) ) {
+        return $defaults;
+    }
+    return [
+        'minRating'  => isset( $saved['minRating'] )  ? (int) $saved['minRating']  : $defaults['minRating'],
+        'minLength'  => isset( $saved['minLength'] )  ? (int) $saved['minLength']  : $defaults['minLength'],
+        'maxReviews' => isset( $saved['maxReviews'] ) ? (int) $saved['maxReviews'] : $defaults['maxReviews'],
+    ];
+}
+
+/** Clamp filter values to safe ranges before saving. */
+function erf_sanitize_filters( $input ) {
+    $d = erf_get_filter_defaults();
+    return [
+        'minRating'  => min( 5, max( 1, isset( $input['minRating'] )  ? (int) $input['minRating']  : $d['minRating'] ) ),
+        'minLength'  => min( 500, max( 0, isset( $input['minLength'] )  ? (int) $input['minLength']  : $d['minLength'] ) ),
+        'maxReviews' => min( 4, max( 1, isset( $input['maxReviews'] ) ? (int) $input['maxReviews'] : $d['maxReviews'] ) ),
+    ];
+}
