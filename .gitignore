@@ -1,0 +1,12 @@
+# Dev-only preview harness — not part of the shipped plugin
+preview.html
+.claude/
+
+# OS / editor cruft
+.DS_Store
+*.log
+Thumbs.db
+
+# Build artifact (Git Updater pulls from the repo/tag, not a zip)
+../enamel-reviews-feed.zip
+*.zip

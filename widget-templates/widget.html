@@ -1,0 +1,199 @@
+<!-- =========================================================
+     ENAMEL DENTISTRY — PATIENT REVIEWS (UNIVERSAL WIDGET)
+     Paste this same snippet into ANY Elementor HTML widget.
+     The ONLY thing you change per page is the data-location attribute
+     on the <section> element below.
+
+     EXAMPLES:
+       data-location=""              → Generic (network-wide, all studios)
+       data-location="south-lamar"   → South Lamar studio only
+       data-location="east-austin"   → East Austin studio only
+       (any slug listed in Settings → Enamel Reviews → Widget Copy)
+
+     The plugin auto-fills the headline, lede, booking URL, Google URL,
+     and the right JSON feed based on data-location. Edit those values in
+     WP Admin → Settings → Enamel Reviews — no need to touch this HTML.
+
+     REQUIRES: "Enamel Reviews Feed" plugin must be activated.
+     ========================================================= -->
+
+<section class="ed-rv" data-location="" aria-labelledby="ed-rv-title">
+  <div class="ed-rv__wrap">
+
+    <!-- Featured postcard (left) -->
+    <article class="ed-rv__featured" data-role="featured" aria-live="polite" aria-atomic="false" aria-label="Featured patient review">
+      <span class="ed-rv__featured-pin">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M16 3l1.5 4.5L22 9l-4.5 1.5L16 15l-1.5-4.5L10 9l4.5-1.5L16 3zM7 12l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z"/>
+        </svg>
+        Featured patient
+      </span>
+      <div class="ed-rv-stars ed-rv-stars--lg" data-role="stars" role="img" aria-label="5 out of 5 stars">★★★★★</div>
+      <p class="ed-rv__featured-quote" data-role="quote">Loading the latest review&hellip;</p>
+      <div class="ed-rv__featured-foot">
+        <div class="ed-rv-author">
+          <div class="ed-rv-avatar" data-role="initials" aria-hidden="true">EA</div>
+          <div>
+            <div class="ed-rv-author-name" data-role="name">Enamel Patient</div>
+            <div class="ed-rv-author-meta">
+              <span data-role="location">Austin</span>
+              <span aria-hidden="true">·</span>
+              <span data-role="time">recent</span>
+            </div>
+          </div>
+        </div>
+        <span class="ed-rv-verified">
+          <span data-role="glogo"></span>
+          Verified · Google
+        </span>
+      </div>
+    </article>
+
+    <!-- Eyebrow + headline + stat strip + lede + CTAs (right) -->
+    <div class="ed-rv__side">
+      <div class="ed-rv-eyebrow">
+        <strong data-role="agg-total-rounded">4,000+</strong> Reviews
+      </div>
+
+      <h2 class="ed-rv__title" data-role="headline" id="ed-rv-title">&hellip;</h2>
+
+      <div class="ed-rv__statline">
+        <span class="ed-rv-stars ed-rv-stars--lg" role="img" aria-label="4.9 out of 5 average rating">★★★★★</span>
+        <span class="ed-rv__statline-num"><strong data-role="agg-rating">4.9</strong> / 5 average</span>
+        <span class="ed-rv__statline-sep" aria-hidden="true">·</span>
+        <span class="ed-rv__statline-google">
+          <span data-role="glogo-sm"></span>
+          Verified on Google
+        </span>
+      </div>
+
+      <p class="ed-rv__lede" data-role="lede">&hellip;</p>
+
+      <div class="ed-rv__cta">
+        <a class="ed-rv-btn ed-rv-btn--primary" data-role="booking-link" href="#">
+          <span data-role="booking-text">Book your visit</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <a class="ed-rv-btn ed-rv-btn--ghost" data-role="google-link" href="#" target="_blank" rel="noopener">
+          Read all on Google
+        </a>
+      </div>
+    </div>
+
+    <!-- 4-up mini grid (row 2) -->
+    <div class="ed-rv__grid" data-role="grid" aria-live="polite" aria-atomic="false" role="list" aria-label="More patient reviews"></div>
+
+  </div>
+</section>
+
+<script>
+(function () {
+  'use strict';
+
+  function init() {
+    // Wait until BOTH the API and the per-location config (printed by the plugin
+    // immediately before the API script) are present.
+    if (!window.EnamelReviews || !window.ENAMEL_LOCATIONS) return setTimeout(init, 50);
+
+    var roots = document.querySelectorAll('.ed-rv:not([data-bound])');
+    roots.forEach(function (root) {
+      root.dataset.bound = '1';
+
+      // 1) Pick config based on data-location, fall back to generic ('')
+      var slug = root.getAttribute('data-location') || '';
+      var cfg  = window.ENAMEL_LOCATIONS[slug] || window.ENAMEL_LOCATIONS[''] || null;
+      if (!cfg) {
+        console.warn('[EnamelReviews] no config for data-location="' + slug + '"');
+        return;
+      }
+
+      // 2) Inject the location-specific copy & links
+      var headlineEl = root.querySelector('[data-role="headline"]');
+      var ledeEl     = root.querySelector('[data-role="lede"]');
+      var bookBtn    = root.querySelector('[data-role="booking-link"]');
+      var bookText   = root.querySelector('[data-role="booking-text"]');
+      var googleBtn  = root.querySelector('[data-role="google-link"]');
+
+      if (headlineEl) headlineEl.innerHTML = cfg.headline;
+      if (ledeEl)     ledeEl.innerHTML     = cfg.lede;
+      if (bookBtn)    bookBtn.setAttribute('href', cfg.bookingUrl);
+      if (bookText)   bookText.textContent = cfg.buttonText;
+      if (googleBtn)  googleBtn.setAttribute('href', cfg.googleUrl);
+
+      // 3) Aria-labelledby gets a unique ID to prevent collisions if multiple
+      //    widgets land on the same page.
+      var uid = 'ed-rv-' + Math.random().toString(36).slice(2, 7);
+      var h2  = root.querySelector('h2[id]');
+      if (h2) { h2.id = uid; root.setAttribute('aria-labelledby', uid); }
+
+      // 4) Fetch reviews from the right per-location JSON
+      window.EnamelReviews.load({
+        source:      'static',
+        feedUrl:     cfg.feedUrl,
+        maxReviews:  4,
+        maxFeatured: 1
+      }).then(function (payload) { bindPayload(root, payload); });
+    });
+  }
+
+  function bindPayload(root, payload) {
+    var aggregate = payload.aggregate;
+    var featured  = payload.featured;
+    var reviews   = payload.reviews;
+    var fmt       = window.EnamelReviews.fmt;
+    var glogo     = window.EnamelReviews.googleLogoSVG;
+
+    // Featured card
+    var f = featured[0];
+    if (f) {
+      var card = root.querySelector('[data-role="featured"]');
+      var starsEl = card.querySelector('[data-role="stars"]');
+      starsEl.innerHTML = fmt.stars(f.rating);
+      starsEl.setAttribute('aria-label', f.rating + ' out of 5 stars');
+      card.querySelector('[data-role="quote"]').textContent    = fmt.truncate(f.text, 280);
+      card.querySelector('[data-role="initials"]').textContent = f.initials;
+      card.querySelector('[data-role="name"]').textContent     = f.author_name;
+      card.querySelector('[data-role="location"]').textContent = f.location;
+      card.querySelector('[data-role="time"]').textContent     = f.relative_time_description;
+      card.querySelector('[data-role="glogo"]').innerHTML      = glogo(16);
+    }
+
+    // Aggregate (some targets are optional — only present in generic lede)
+    var set = function (sel, val) { var el = root.querySelector(sel); if (el) el.textContent = val; };
+    set('[data-role="agg-total-rounded"]', roundDown(aggregate.total));
+    set('[data-role="agg-rating"]',        aggregate.rating);
+    set('[data-role="agg-studios"]',       aggregate.studios);
+    var gl = root.querySelector('[data-role="glogo-sm"]'); if (gl) gl.innerHTML = glogo(14);
+
+    // a11y: stat-strip star aria-label kept in sync with live rating
+    var statStars = root.querySelector('.ed-rv__statline .ed-rv-stars');
+    if (statStars) statStars.setAttribute('aria-label', aggregate.rating + ' out of 5 average rating');
+
+    // 4-up mini grid (4 cards = the Google Places per-place max)
+    var grid = root.querySelector('[data-role="grid"]');
+    grid.innerHTML = reviews.slice(0, 4).map(function (r) {
+      return '<div class="ed-rv__mini" role="listitem">'
+        + '<div class="ed-rv-stars" role="img" aria-label="' + r.rating + ' out of 5 stars">' + fmt.stars(r.rating) + '</div>'
+        + '<p class="ed-rv__mini-text">' + esc(fmt.truncate(r.text, 140)) + '</p>'
+        + '<div class="ed-rv__mini-foot">'
+        +   '<span class="ed-rv__mini-name">' + esc(r.author_name) + '</span>'
+        +   '<span class="ed-rv__mini-loc">'  + esc(r.location)    + '</span>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function roundDown(n) {
+    if (n >= 1000) return Math.floor(n / 1000) + ',000+';
+    if (n >= 100)  return Math.floor(n / 100) * 100 + '+';
+    return String(n);
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  init();
+})();
+</script>

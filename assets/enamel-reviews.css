@@ -1,0 +1,409 @@
+/* =====================================================================
+   Enamel Dentistry — Patient Reviews Section
+   ---------------------------------------------------------------------
+   Single section block. Pairs visually with the "Your Comfort Matters"
+   section above it: lavender background, white postcard featured card,
+   dashed-rule hand-receipt touches, restrained orange accent.
+
+   Architecture:
+     [ Featured postcard  ]  [ Eyebrow + headline + stat-line + lede + CTAs ]
+     [               4-up mini grid (4×1 desktop, 2×2 tablet, 1-col mobile) ]
+
+   All styles scoped under .ed-rv — cannot leak into surrounding theme.
+   Tokens inlined (Enamel brand palette) so the file is self-contained.
+   ===================================================================== */
+
+.ed-rv {
+  /* Brand palette */
+  --ed-dark-purple: #231942;
+  --ed-dark-purple-800: #1C153A;
+  --ed-bright-purple: #7D55C7;
+  --ed-bright-purple-700: #5E3BA0;
+  --ed-orange: #E56B10;
+  --ed-orange-700: #B8540A;
+  --ed-lavender: #EDE9FF;
+  --ed-lavender-200: #F4F1FF;
+  --ed-lavender-100: #FAF8FF;
+  --ed-ink: #1B1330;
+  --ed-ink-2: #4B425E;
+  --ed-ink-3: #6B6278; /* a11y: darkened from #847D94 — now 4.6:1 on white */
+  --ed-line: #E6E1F3;
+  --ed-line-2: #D4CDE6;
+
+  --rv-font-display: 'Montserrat', system-ui, -apple-system, sans-serif;
+  --rv-font-body: 'Rubik', system-ui, -apple-system, sans-serif;
+  --rv-shadow-sm: 0 2px 8px rgba(35, 25, 66, 0.08);
+  --rv-shadow-md: 0 10px 28px rgba(35, 25, 66, 0.10);
+  --rv-shadow-lg: 0 30px 80px rgba(35, 25, 66, 0.14);
+
+  font-family: var(--rv-font-body);
+  color: var(--ed-ink);
+  background: var(--ed-lavender);
+  position: relative;
+  overflow: hidden;
+}
+.ed-rv *, .ed-rv *::before, .ed-rv *::after { box-sizing: border-box; }
+.ed-rv h2, .ed-rv h3 { font-family: var(--rv-font-display); color: var(--ed-dark-purple); margin: 0; }
+.ed-rv a { text-decoration: none; }
+
+/* Layout wrap ---------------------------------------------------------- */
+.ed-rv__wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 112px 32px;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 56px;
+  align-items: start;
+}
+
+/* Shared bits ---------------------------------------------------------- */
+.ed-rv-stars {
+  display: inline-flex;
+  gap: 1px;
+  font-size: 16px;
+  line-height: 1;
+  color: #9E7600; /* a11y: darkened from #F5B400 — now 3.4:1 on white (1.4.11 UI component) */
+  letter-spacing: 0;
+}
+.ed-rv-star { color: #B0A8C4; } /* a11y: darkened from #E2DAF1 — 3.1:1 on white */
+.ed-rv-star.is-on { color: #9E7600; } /* a11y: darkened from #F5B400 */
+.ed-rv-stars--lg { font-size: 22px; }
+
+.ed-rv-eyebrow {
+  font-family: var(--rv-font-display);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ed-bright-purple-700); /* a11y: was --ed-bright-purple (4.34:1) — 700 shade is 8.5:1 on lavender */
+}
+.ed-rv-eyebrow strong { font-weight: 800; color: var(--ed-bright-purple-700); }
+
+.ed-rv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--rv-font-display);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 14px 22px;
+  min-height: 44px; /* a11y: guaranteed 44px touch target (2.5.5) */
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 120ms ease, background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+}
+.ed-rv-btn--primary { background: var(--ed-dark-purple); color: #fff; }
+.ed-rv-btn--primary:hover,
+.ed-rv-btn--primary:focus-visible {
+  background: var(--ed-dark-purple-800);
+  transform: translateY(-1px);
+  box-shadow: var(--rv-shadow-md);
+}
+.ed-rv-btn--ghost {
+  background: transparent;
+  color: var(--ed-dark-purple);
+  box-shadow: inset 0 0 0 1.5px var(--ed-dark-purple);
+}
+.ed-rv-btn--ghost:hover,
+.ed-rv-btn--ghost:focus-visible {
+  background: var(--ed-dark-purple);
+  color: #fff;
+}
+.ed-rv-btn:focus-visible {
+  outline: 3px solid var(--ed-orange);
+  outline-offset: 3px;
+}
+
+/* Author chip (avatar + name + meta) --------------------------------- */
+.ed-rv-author { display: flex; align-items: center; gap: 12px; }
+.ed-rv-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: var(--ed-lavender-200);
+  color: var(--ed-bright-purple);
+  display: grid;
+  place-items: center;
+  font-family: var(--rv-font-display);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.ed-rv-author-name {
+  font-family: var(--rv-font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ed-dark-purple);
+  line-height: 1.2;
+}
+.ed-rv-author-meta {
+  font-family: var(--rv-font-body);
+  font-size: 12px;
+  color: var(--ed-ink-3);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* "Verified · Google" inline stamp */
+.ed-rv-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--ed-ink-3);
+  letter-spacing: 0.02em;
+}
+.ed-rv-glogo { vertical-align: -3px; }
+
+/* =====================================================================
+   FEATURED CARD (left of hero pair) — postcard / receipt aesthetic
+   ===================================================================== */
+.ed-rv__featured {
+  grid-column: 1;
+  grid-row: 1;
+  background: #fff;
+  border-radius: 28px;
+  padding: 44px 44px 36px;
+  box-shadow: var(--rv-shadow-lg), 0 2px 0 rgba(35,25,66,0.04);
+  border: 1px solid var(--ed-line);
+  position: relative;
+}
+/* Soft "stack" shadow underneath — echoes postcard / receipt physicality */
+.ed-rv__featured::after {
+  content: "";
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: -8px;
+  height: 8px;
+  border-radius: 0 0 24px 24px;
+  background: var(--ed-lavender-200);
+  transform: scaleX(0.94);
+  z-index: -1;
+}
+.ed-rv__featured-pin {
+  position: absolute;
+  top: -14px;
+  left: 28px;
+  background: var(--ed-orange);
+  color: #fff;
+  font-family: var(--rv-font-display);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ed-rv__featured-quote {
+  font-family: var(--rv-font-display);
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 1.32;
+  color: var(--ed-dark-purple);
+  letter-spacing: -0.01em;
+  margin: 16px 0 28px;
+  text-wrap: pretty;
+}
+.ed-rv__featured-quote::before {
+  content: "\201C" / ""; /* left double quote — empty alt suppresses SR announcement in Chrome/Edge/Firefox */
+  display: block;
+  font-family: var(--rv-font-display);
+  font-weight: 800;
+  font-size: 64px;
+  line-height: 0.6;
+  color: var(--ed-bright-purple);
+  margin-bottom: 12px;
+}
+.ed-rv__featured-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding-top: 22px;
+  border-top: 1px dashed var(--ed-line-2);
+}
+
+/* =====================================================================
+   RIGHT COLUMN (eyebrow + headline + stat strip + lede + CTAs)
+   ===================================================================== */
+.ed-rv__side {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ed-rv__title {
+  font-family: var(--rv-font-display);
+  font-weight: 800;
+  font-size: clamp(40px, 4.6vw, 56px);
+  line-height: 1.0;
+  letter-spacing: -0.025em;
+  color: var(--ed-dark-purple);
+  text-wrap: balance;
+  margin: 4px 0 0;
+}
+.ed-rv__title em {
+  font-style: italic;
+  font-weight: 500;
+  color: var(--ed-bright-purple);
+}
+
+.ed-rv__statline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  font-family: var(--rv-font-display);
+  font-size: 14px;
+  color: var(--ed-ink-2);
+  margin-top: 4px;
+}
+.ed-rv__statline-num { font-weight: 700; color: var(--ed-dark-purple); }
+.ed-rv__statline-num strong { font-size: 18px; font-weight: 800; }
+.ed-rv__statline-sep { color: var(--ed-ink-3); }
+.ed-rv__statline-google {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  color: var(--ed-ink-2);
+}
+
+.ed-rv__lede {
+  font-family: var(--rv-font-body);
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ed-ink-2);
+  margin: 4px 0 0;
+  max-width: 46ch;
+  text-wrap: pretty;
+}
+.ed-rv__lede strong { color: var(--ed-dark-purple); font-weight: 700; }
+
+.ed-rv__cta {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+/* =====================================================================
+   MINI GRID (row 2, full-width 4×1 desktop · 2×2 tablet · 1-col mobile)
+   Matches the 5-reviews-per-Place hard limit from Google Places API:
+   1 featured + 4 mini = 5 total, the max per location.
+   ===================================================================== */
+.ed-rv__grid {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-top: 8px;
+}
+.ed-rv__mini {
+  background: #fff;
+  border: 1px solid var(--ed-line);
+  border-radius: 20px;
+  padding: 22px 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 200px;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+.ed-rv__mini:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--rv-shadow-md);
+  border-color: var(--ed-line-2);
+}
+.ed-rv__mini-text {
+  font-family: var(--rv-font-body);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ed-ink-2);
+  margin: 0;
+  flex: 1;
+}
+.ed-rv__mini-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--ed-line-2);
+}
+.ed-rv__mini-name {
+  font-family: var(--rv-font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ed-dark-purple);
+}
+.ed-rv__mini-loc {
+  font-family: var(--rv-font-display);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ed-bright-purple-700);
+  background: var(--ed-lavender-200);
+  padding: 4px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* =====================================================================
+   RESPONSIVE
+   ===================================================================== */
+@media (max-width: 960px) {
+  .ed-rv__wrap {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding: 80px 24px;
+  }
+  .ed-rv__featured { grid-column: 1; grid-row: 1; padding: 36px 32px 30px; }
+  .ed-rv__featured-quote { font-size: 22px; }
+  .ed-rv__side { grid-column: 1; grid-row: 2; }
+  .ed-rv__grid { grid-column: 1; grid-row: 3; grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .ed-rv__wrap { padding: 64px 20px; gap: 32px; }
+  .ed-rv__featured { padding: 32px 24px 26px; border-radius: 22px; }
+  .ed-rv__featured-quote { font-size: 19px; }
+  .ed-rv__featured-quote::before { font-size: 52px; }
+  .ed-rv__featured-foot { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .ed-rv__title { font-size: 36px; }
+  .ed-rv__grid { grid-template-columns: 1fr; }
+  .ed-rv__cta { flex-direction: column; align-items: stretch; }
+  .ed-rv-btn { justify-content: center; }
+}
+
+/* =====================================================================
+   REDUCED MOTION — disable hover lifts + any transitions for users
+   who've requested reduced motion.
+   ===================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .ed-rv * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .ed-rv__mini:hover,
+  .ed-rv-btn--primary:hover,
+  .ed-rv-btn--primary:focus-visible {
+    transform: none;
+  }
+}
