@@ -23,6 +23,7 @@ add_action( 'admin_menu', 'erf_admin_menu' );
 add_action( 'admin_init', 'erf_admin_init' );
 add_action( 'admin_post_erf_fetch_now', 'erf_admin_fetch_now' );
 add_action( 'admin_post_erf_save_copy', 'erf_admin_save_copy' );
+add_action( 'admin_post_erf_lookup_ids', 'erf_admin_lookup_ids' );
 
 function erf_admin_menu() {
     add_options_page(
@@ -54,6 +55,15 @@ function erf_admin_fetch_now() {
     check_admin_referer( 'erf_fetch_now' );
     erf_do_fetch();
     wp_safe_redirect( add_query_arg( [ 'page' => 'enamel-reviews', 'fetched' => '1' ], admin_url( 'options-general.php' ) ) );
+    exit;
+}
+
+function erf_admin_lookup_ids() {
+    if ( ! current_user_can( 'manage_options' ) ) wp_die( 'Unauthorized' );
+    check_admin_referer( 'erf_lookup_ids' );
+    $result = erf_lookup_place_ids();
+    set_transient( 'erf_lookup_result', $result, 120 );
+    wp_safe_redirect( add_query_arg( [ 'page' => 'enamel-reviews', 'looked_up' => '1' ], admin_url( 'options-general.php' ) ) );
     exit;
 }
 
@@ -112,6 +122,30 @@ function erf_admin_page() {
         <?php if ( isset( $_GET['saved'] ) ) : ?>
             <div class="notice notice-success is-dismissible"><p>Widget copy saved. Pages will reflect the new copy on next page load.</p></div>
         <?php endif; ?>
+        <?php
+        if ( isset( $_GET['looked_up'] ) ) {
+            $lr = get_transient( 'erf_lookup_result' );
+            delete_transient( 'erf_lookup_result' );
+            if ( ! empty( $lr['error'] ) ) {
+                echo '<div class="notice notice-error"><p><strong>Place ID lookup failed:</strong> ' . esc_html( $lr['error'] ) . '</p></div>';
+            } elseif ( ! empty( $lr['report'] ) ) {
+                $ok = 0;
+                foreach ( $lr['report'] as $r ) { if ( ! empty( $r['ok'] ) ) { $ok++; } }
+                echo '<div class="notice notice-success"><p><strong>Place ID lookup: ' . (int) $ok . ' of ' . count( $lr['report'] ) . ' matched.</strong> Review below, then click <em>Fetch Reviews Now</em>.</p>';
+                echo '<table class="widefat striped" style="max-width:900px;margin:8px 0;"><thead><tr><th>Studio</th><th>Result</th><th>Matched name / address</th></tr></thead><tbody>';
+                $locs = erf_get_locations();
+                foreach ( $lr['report'] as $slug => $r ) {
+                    $label = isset( $locs[ $slug ]['label'] ) ? $locs[ $slug ]['label'] : $slug;
+                    if ( ! empty( $r['ok'] ) ) {
+                        echo '<tr><td>' . esc_html( $label ) . '</td><td>✅ <code>' . esc_html( $r['place_id'] ) . '</code></td><td>' . esc_html( $r['name'] . ' — ' . $r['address'] ) . '</td></tr>';
+                    } else {
+                        echo '<tr><td>' . esc_html( $label ) . '</td><td>❌ ' . esc_html( $r['msg'] ) . '</td><td>—</td></tr>';
+                    }
+                }
+                echo '</tbody></table></div>';
+            }
+        }
+        ?>
 
         <h2 class="title">1. API Key</h2>
         <form method="post" action="options.php">
@@ -147,6 +181,16 @@ function erf_admin_page() {
             (search the studio, copy the ID that starts with <code>ChIJ…</code>).
             After saving, click <strong>Fetch Reviews Now</strong> below to pull live reviews.
         </p>
+        <p>
+            <strong>Or let the plugin find them for you:</strong> this looks up each studio by name
+            using your saved API key (server-side) and fills in any matches. Verify the matched
+            addresses afterward.
+        </p>
+        <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-bottom:16px;">
+            <input type="hidden" name="action" value="erf_lookup_ids">
+            <?php wp_nonce_field( 'erf_lookup_ids' ); ?>
+            <?php submit_button( 'Auto-find Place IDs from Google', 'primary', 'erf_lookup_submit', false ); ?>
+        </form>
         <?php $saved_ids = erf_get_place_ids(); ?>
         <form method="post" action="options.php">
             <?php settings_fields( 'erf_place_ids_group' ); ?>

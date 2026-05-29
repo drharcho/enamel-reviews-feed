@@ -3,7 +3,7 @@
  * Plugin Name:       Enamel Reviews Feed
  * Plugin URI:        https://enameldentistry.com
  * Description:       Fetches Google Places reviews for all Enamel studios once daily and writes static JSON feeds consumed by the patient reviews Elementor widget. No client-side API key exposure.
- * Version:           1.1.2
+ * Version:           1.1.3
  * Author:            Enamel Dentistry
  * License:           Proprietary
  * Text Domain:       enamel-reviews-feed
@@ -27,7 +27,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ERF_VERSION',  '1.1.2' );
+define( 'ERF_VERSION',  '1.1.3' );
 define( 'ERF_DIR',      plugin_dir_path( __FILE__ ) );
 define( 'ERF_URL',      plugin_dir_url( __FILE__ ) );
 define( 'ERF_FEED_DIR', WP_CONTENT_DIR . '/uploads/enamel/' );

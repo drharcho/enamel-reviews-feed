@@ -153,3 +153,63 @@ function erf_initials( $name ) {
     }
     return $init ?: '?';
 }
+
+/* ------------------------------------------------------------------
+ * Auto-find Place IDs from Google by studio name.
+ * Uses the stored API key server-side (never exposed to the browser)
+ * to call Places "Find Place From Text" for each studio, and saves any
+ * matches into the erf_place_ids option. Returns a per-studio report so
+ * the admin can eyeball the matched name/address before fetching.
+ * ------------------------------------------------------------------ */
+function erf_lookup_place_ids() {
+    $api_key = get_option( 'erf_api_key', '' );
+    if ( empty( $api_key ) || strpos( $api_key, '__' ) !== false ) {
+        return [ 'error' => 'API key not set — save your Google Maps API key first.' ];
+    }
+
+    $existing = erf_get_place_ids();
+    $report   = [];
+
+    foreach ( erf_get_location_defaults() as $slug => $loc ) {
+        $city  = ( $slug === 'mckinney' ) ? 'McKinney, TX' : 'Austin, TX';
+        $query = 'Enamel Dentistry ' . $loc['label'] . ', ' . $city;
+
+        $url = add_query_arg(
+            [
+                'input'     => rawurlencode( $query ),
+                'inputtype' => 'textquery',
+                'fields'    => 'place_id,name,formatted_address',
+                'key'       => $api_key,
+            ],
+            'https://maps.googleapis.com/maps/api/place/findplacefromtext/json'
+        );
+
+        $response = wp_remote_get( $url, [ 'timeout' => 10 ] );
+
+        if ( is_wp_error( $response ) ) {
+            $report[ $slug ] = [ 'ok' => false, 'msg' => 'request failed' ];
+            continue;
+        }
+
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        if ( ! empty( $body['candidates'][0]['place_id'] ) ) {
+            $cand                = $body['candidates'][0];
+            $existing[ $slug ]   = $cand['place_id'];
+            $report[ $slug ]     = [
+                'ok'       => true,
+                'place_id' => $cand['place_id'],
+                'name'     => isset( $cand['name'] ) ? $cand['name'] : '',
+                'address'  => isset( $cand['formatted_address'] ) ? $cand['formatted_address'] : '',
+            ];
+        } else {
+            $report[ $slug ] = [ 'ok' => false, 'msg' => isset( $body['status'] ) ? $body['status'] : 'no match' ];
+        }
+
+        usleep( 150000 ); // gentle on the quota
+    }
+
+    update_option( 'erf_place_ids', erf_sanitize_place_ids( $existing ) );
+
+    return [ 'report' => $report ];
+}
