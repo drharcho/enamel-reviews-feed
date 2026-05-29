@@ -43,6 +43,10 @@ function erf_admin_init() {
         'sanitize_callback' => 'erf_sanitize_filters',
         'default'           => erf_get_filter_defaults(),
     ] );
+    register_setting( 'erf_place_ids_group', 'erf_place_ids', [
+        'sanitize_callback' => 'erf_sanitize_place_ids',
+        'default'           => [],
+    ] );
 }
 
 function erf_admin_fetch_now() {
@@ -136,7 +140,44 @@ function erf_admin_page() {
 
         <hr>
 
-        <h2 class="title">2. Manual Fetch</h2>
+        <h2 class="title">2. Place IDs</h2>
+        <p>
+            One Google Place ID per studio. Find each one with the
+            <a href="https://developers.google.com/maps/documentation/places/web-service/place-id" target="_blank" rel="noopener">Google Place ID Finder &rarr;</a>
+            (search the studio, copy the ID that starts with <code>ChIJ…</code>).
+            After saving, click <strong>Fetch Reviews Now</strong> below to pull live reviews.
+        </p>
+        <?php $saved_ids = erf_get_place_ids(); ?>
+        <form method="post" action="options.php">
+            <?php settings_fields( 'erf_place_ids_group' ); ?>
+            <table class="form-table" role="presentation">
+                <?php foreach ( $locations as $slug => $loc ) :
+                    $val    = isset( $saved_ids[ $slug ] ) ? $saved_ids[ $slug ] : '';
+                    $is_set = ( $val !== '' );
+                    ?>
+                    <tr>
+                        <th scope="row"><label for="erf_pid_<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $loc['label'] ); ?></label></th>
+                        <td>
+                            <input
+                                type="text"
+                                id="erf_pid_<?php echo esc_attr( $slug ); ?>"
+                                name="erf_place_ids[<?php echo esc_attr( $slug ); ?>]"
+                                value="<?php echo esc_attr( $val ); ?>"
+                                class="regular-text code"
+                                placeholder="ChIJ…"
+                                autocomplete="off"
+                            >
+                            <span style="margin-left:8px;"><?php echo $is_set ? '✅ set' : '❌ not set'; ?></span>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </table>
+            <?php submit_button( 'Save Place IDs' ); ?>
+        </form>
+
+        <hr>
+
+        <h2 class="title">3. Manual Fetch</h2>
         <p>Run the Places fetch right now. (Normally runs once a day at 3am UTC.)</p>
         <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
             <input type="hidden" name="action" value="erf_fetch_now">
@@ -146,7 +187,7 @@ function erf_admin_page() {
 
         <hr>
 
-        <h2 class="title">3. Status</h2>
+        <h2 class="title">4. Status</h2>
         <table class="widefat striped" style="max-width:680px;">
             <tbody>
                 <tr><td><strong>Last fetch</strong></td><td><?php echo $last_time ? esc_html( date( 'Y-m-d H:i:s T', $last_time ) ) : '—'; ?></td></tr>
@@ -157,7 +198,7 @@ function erf_admin_page() {
 
         <hr id="widget-copy">
 
-        <h2 class="title">4. Widget Copy</h2>
+        <h2 class="title">5. Widget Copy</h2>
         <p>
             Edit the headline, lede, booking URL, and Google listing URL the widget shows for each context.
             The <strong>data-location</strong> attribute on the Elementor HTML widget chooses which set of copy gets used.
@@ -188,7 +229,7 @@ function erf_admin_page() {
 
         <hr>
 
-        <h2 class="title">5. Display Filters</h2>
+        <h2 class="title">6. Display Filters</h2>
         <p>Tune which reviews are eligible to show. Changes take effect on the next page load — no re-fetch needed.</p>
         <?php $filters = erf_get_filters(); ?>
         <form method="post" action="options.php">
@@ -225,7 +266,7 @@ function erf_admin_page() {
 
         <hr>
 
-        <h2 class="title">6. Feed File URLs</h2>
+        <h2 class="title">7. Feed File URLs</h2>
         <p>The plugin writes these JSON files for the widget to consume. They update once a day after the cron runs.</p>
         <table class="widefat striped" style="max-width:900px;">
             <thead><tr><th>Context</th><th>data-location value</th><th>Feed URL</th><th>File exists?</th></tr></thead>
@@ -253,7 +294,7 @@ function erf_admin_page() {
 
         <hr>
 
-        <h2 class="title">7. Cloudways Cron Note</h2>
+        <h2 class="title">8. Cloudways Cron Note</h2>
         <p>WP-Cron only fires when someone loads a page. For a guaranteed daily run, add this in <strong>Cloudways → Application → Cron Job Manager</strong>:</p>
         <pre style="background:#f0f0f1;padding:12px;max-width:780px;overflow:auto;">0 3 * * * wget -q -O /dev/null "<?php echo esc_url( site_url( '/?erf_cron_key=' . wp_hash( 'erf_cron' ) ) ); ?>" &gt;/dev/null 2&gt;&amp;1</pre>
         <p>Then add <code>define( 'DISABLE_WP_CRON', true );</code> to <code>wp-config.php</code>.</p>

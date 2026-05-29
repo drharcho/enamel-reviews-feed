@@ -138,8 +138,10 @@ function erf_editable_fields() {
 function erf_get_locations() {
     $defaults  = erf_get_location_defaults();
     $overrides = get_option( 'erf_locations', [] );
+    $place_ids = get_option( 'erf_place_ids', [] );
 
     foreach ( $defaults as $slug => &$loc ) {
+        // Copy overrides (booking URL, headline, lede, etc.)
         if ( ! empty( $overrides[ $slug ] ) && is_array( $overrides[ $slug ] ) ) {
             foreach ( erf_editable_fields() as $field ) {
                 if ( isset( $overrides[ $slug ][ $field ] ) && $overrides[ $slug ][ $field ] !== '' ) {
@@ -147,9 +149,37 @@ function erf_get_locations() {
                 }
             }
         }
+        // Place ID override (entered in WP Admin → Settings → Enamel Reviews).
+        // Replaces the PHP placeholder so no code edit is ever needed.
+        if ( ! empty( $place_ids[ $slug ] ) ) {
+            $loc['place_id'] = $place_ids[ $slug ];
+        }
     }
     unset( $loc );
     return $defaults;
+}
+
+/** Place IDs as saved in admin (slug => id). Empty array if never set. */
+function erf_get_place_ids() {
+    $saved = get_option( 'erf_place_ids', [] );
+    return is_array( $saved ) ? $saved : [];
+}
+
+/** Sanitize the Place IDs form: trim, strip anything but valid ID characters. */
+function erf_sanitize_place_ids( $input ) {
+    $clean = [];
+    if ( is_array( $input ) ) {
+        foreach ( $input as $slug => $id ) {
+            $slug = sanitize_key( $slug );
+            $id   = trim( sanitize_text_field( $id ) );
+            // Don't store leftover placeholders or blanks.
+            if ( $id === '' || strpos( $id, '__' ) !== false ) {
+                continue;
+            }
+            $clean[ $slug ] = $id;
+        }
+    }
+    return $clean;
 }
 
 /** Generic config merged with admin overrides. */
