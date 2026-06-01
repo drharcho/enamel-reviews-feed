@@ -280,14 +280,15 @@
   font-size: clamp(40px, 4.6vw, 56px);
   line-height: 1.0;
   letter-spacing: -0.025em;
-  color: var(--ed-on-dark);
+  /* !important: host theme styles <h2> heading color with high specificity */
+  color: var(--ed-on-dark) !important;
   text-wrap: balance;
   margin: 4px 0 0;
 }
 .ed-rv__title em {
   font-style: italic;
   font-weight: 500;
-  color: var(--ed-accent-light);
+  color: var(--ed-accent-light) !important;
 }
 
 .ed-rv__statline {
