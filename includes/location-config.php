@@ -22,6 +22,7 @@ function erf_get_location_defaults() {
 
         'south-lamar' => [
             'label'       => 'South Lamar',
+            'address'     => '2717 S Lamar Blvd #1086, Austin, TX 78704',
             'place_id'    => '__PLACE_ID_SOUTH_LAMAR__',
             'booking_url' => 'https://enamel.subscribili.com/appointments',
             'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+south+lamar+reviews',
@@ -29,86 +30,95 @@ function erf_get_location_defaults() {
             'lede'        => 'Our South Lamar patients keep saying about the same thing. We won&rsquo;t argue with them.',
             'button_text' => 'Book at South Lamar',
         ],
-        'east-austin' => [
-            'label'       => 'East Austin',
-            'place_id'    => '__PLACE_ID_EAST_AUSTIN__',
+        'parmer-park' => [
+            'label'       => 'Parmer Park',
+            'address'     => '1606 E Parmer Ln #125, Austin, TX 78753',
+            'place_id'    => '__PLACE_ID_PARMER_PARK__',
             'booking_url' => 'https://enamel.subscribili.com/appointments',
-            'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+east+austin+reviews',
-            'headline'    => 'East Austin patients keep <em>telling on us.</em>',
-            'lede'        => 'Our East Austin patients keep saying about the same thing. We won&rsquo;t argue with them.',
-            'button_text' => 'Book at East Austin',
+            'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+parmer+park+reviews',
+            'headline'    => 'Parmer Park patients keep <em>telling on us.</em>',
+            'lede'        => 'Our Parmer Park patients keep saying about the same thing. We won&rsquo;t argue with them.',
+            'button_text' => 'Book at Parmer Park',
         ],
-        'mueller' => [
-            'label'       => 'Mueller',
-            'place_id'    => '__PLACE_ID_MUELLER__',
+        'lantana' => [
+            'label'       => 'Lantana',
+            'address'     => '7415 Southwest Parkway Building 6 #200, Austin, TX 78735',
+            'place_id'    => '__PLACE_ID_LANTANA__',
             'booking_url' => 'https://enamel.subscribili.com/appointments',
-            'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+mueller+reviews',
-            'headline'    => 'Mueller patients keep <em>telling on us.</em>',
-            'lede'        => 'Our Mueller patients keep saying about the same thing. We won&rsquo;t argue with them.',
-            'button_text' => 'Book at Mueller',
+            'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+lantana+reviews',
+            'headline'    => 'Lantana patients keep <em>telling on us.</em>',
+            'lede'        => 'Our Lantana patients keep saying about the same thing. We won&rsquo;t argue with them.',
+            'button_text' => 'Book at Lantana',
         ],
-        'the-domain' => [
-            'label'       => 'The Domain',
-            'place_id'    => '__PLACE_ID_THE_DOMAIN__',
+        'saltillo' => [
+            'label'       => 'Saltillo',
+            'address'     => '901 E 5th St Suite 170, Austin, TX 78702',
+            'place_id'    => '__PLACE_ID_SALTILLO__',
             'booking_url' => 'https://enamel.subscribili.com/appointments',
-            'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+the+domain+reviews',
+            'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+saltillo+reviews',
+            'headline'    => 'Saltillo patients keep <em>telling on us.</em>',
+            'lede'        => 'Our Saltillo patients keep saying about the same thing. We won&rsquo;t argue with them.',
+            'button_text' => 'Book at Saltillo',
+        ],
+        'domain' => [
+            'label'       => 'Domain',
+            'address'     => '11005 Burnet Rd #100, Austin, TX 78758',
+            'place_id'    => '__PLACE_ID_DOMAIN__',
+            'booking_url' => 'https://enamel.subscribili.com/appointments',
+            'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+domain+reviews',
             'headline'    => 'Domain patients keep <em>telling on us.</em>',
             'lede'        => 'Our Domain patients keep saying about the same thing. We won&rsquo;t argue with them.',
-            'button_text' => 'Book at The Domain',
+            'button_text' => 'Book at Domain',
         ],
-        'tech-ridge' => [
-            'label'       => 'Tech Ridge',
-            'place_id'    => '__PLACE_ID_TECH_RIDGE__',
+        'the-grove' => [
+            'label'       => 'The Grove',
+            'address'     => '4301 Bull Creek Road, Suite 190, Austin, TX 78731',
+            'place_id'    => '__PLACE_ID_THE_GROVE__',
             'booking_url' => 'https://enamel.subscribili.com/appointments',
-            'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+tech+ridge+reviews',
-            'headline'    => 'Tech Ridge patients keep <em>telling on us.</em>',
-            'lede'        => 'Our Tech Ridge patients keep saying about the same thing. We won&rsquo;t argue with them.',
-            'button_text' => 'Book at Tech Ridge',
-        ],
-        'westlake' => [
-            'label'       => 'Westlake',
-            'place_id'    => '__PLACE_ID_WESTLAKE__',
-            'booking_url' => 'https://enamel.subscribili.com/appointments',
-            'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+westlake+reviews',
-            'headline'    => 'Westlake patients keep <em>telling on us.</em>',
-            'lede'        => 'Our Westlake patients keep saying about the same thing. We won&rsquo;t argue with them.',
-            'button_text' => 'Book at Westlake',
-        ],
-        'cedar-park' => [
-            'label'       => 'Cedar Park',
-            'place_id'    => '__PLACE_ID_CEDAR_PARK__',
-            'booking_url' => 'https://enamel.subscribili.com/appointments',
-            'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+cedar+park+reviews',
-            'headline'    => 'Cedar Park patients keep <em>telling on us.</em>',
-            'lede'        => 'Our Cedar Park patients keep saying about the same thing. We won&rsquo;t argue with them.',
-            'button_text' => 'Book at Cedar Park',
-        ],
-        'round-rock' => [
-            'label'       => 'Round Rock',
-            'place_id'    => '__PLACE_ID_ROUND_ROCK__',
-            'booking_url' => 'https://enamel.subscribili.com/appointments',
-            'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+round+rock+reviews',
-            'headline'    => 'Round Rock patients keep <em>telling on us.</em>',
-            'lede'        => 'Our Round Rock patients keep saying about the same thing. We won&rsquo;t argue with them.',
-            'button_text' => 'Book at Round Rock',
-        ],
-        'south-austin' => [
-            'label'       => 'South Austin',
-            'place_id'    => '__PLACE_ID_SOUTH_AUSTIN__',
-            'booking_url' => 'https://enamel.subscribili.com/appointments',
-            'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+south+austin+reviews',
-            'headline'    => 'South Austin patients keep <em>telling on us.</em>',
-            'lede'        => 'Our South Austin patients keep saying about the same thing. We won&rsquo;t argue with them.',
-            'button_text' => 'Book at South Austin',
+            'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+the+grove+austin+reviews',
+            'headline'    => 'The Grove patients keep <em>telling on us.</em>',
+            'lede'        => 'Our Grove patients keep saying about the same thing. We won&rsquo;t argue with them.',
+            'button_text' => 'Book at The Grove',
         ],
         'mckinney' => [
             'label'       => 'McKinney',
+            'address'     => '6700 Alma Rd, Suite 400, McKinney, TX 75070',
             'place_id'    => '__PLACE_ID_MCKINNEY__',
             'booking_url' => 'https://enamel.subscribili.com/appointments',
             'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+mckinney+reviews',
             'headline'    => 'McKinney patients keep <em>telling on us.</em>',
             'lede'        => 'Our McKinney patients keep saying about the same thing. We won&rsquo;t argue with them.',
             'button_text' => 'Book at McKinney',
+        ],
+        'manor' => [
+            'label'       => 'Manor',
+            'address'     => '14008 Shadow Glen Blvd STE 203, Manor, TX 78653',
+            'place_id'    => '__PLACE_ID_MANOR__',
+            'booking_url' => 'https://enamel.subscribili.com/appointments',
+            'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+manor+reviews',
+            'headline'    => 'Manor patients keep <em>telling on us.</em>',
+            'lede'        => 'Our Manor patients keep saying about the same thing. We won&rsquo;t argue with them.',
+            'button_text' => 'Book at Manor',
+        ],
+        'easton-park' => [
+            'label'       => 'Easton Park',
+            'address'     => '7101 E William Cannon Dr, Building 4 Suite 430, Austin, TX 78744',
+            'place_id'    => '__PLACE_ID_EASTON_PARK__',
+            'booking_url' => 'https://enamel.subscribili.com/appointments',
+            'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+easton+park+reviews',
+            'headline'    => 'Easton Park patients keep <em>telling on us.</em>',
+            'lede'        => 'Our Easton Park patients keep saying about the same thing. We won&rsquo;t argue with them.',
+            'button_text' => 'Book at Easton Park',
+        ],
+        'leander' => [
+            'label'       => 'Leander',
+            'address'     => '128 South Brook Drive, Suite 120, Leander, TX 78641',
+            'place_id'    => '__PLACE_ID_LEANDER__',
+            'booking_url' => 'https://enamel.subscribili.com/appointments',
+            'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+leander+reviews',
+            'headline'    => 'Leander patients keep <em>telling on us.</em>',
+            'lede'        => 'Our Leander patients keep saying about the same thing. We won&rsquo;t argue with them.',
+            'button_text' => 'Book at Leander',
         ],
 
     ];
@@ -121,7 +131,7 @@ function erf_get_generic_defaults() {
         'booking_url' => 'https://enamel.subscribili.com/appointments',
         'google_url'  => 'https://www.google.com/search?q=enamel+dentistry+austin+reviews',
         'headline'    => 'Patients keep <em>telling on us.</em>',
-        'lede'        => 'Across <strong data-role="agg-studios">10</strong> Enamel studios in Austin &amp; McKinney, patients keep saying about the same thing. We won&rsquo;t argue with them.',
+        'lede'        => 'Across <strong data-role="agg-studios">10</strong> Enamel studios in the Austin area &amp; McKinney, patients keep saying about the same thing. We won&rsquo;t argue with them.',
         'button_text' => 'Book your visit',
     ];
 }
@@ -165,15 +175,17 @@ function erf_get_place_ids() {
     return is_array( $saved ) ? $saved : [];
 }
 
-/** Sanitize the Place IDs form: trim, strip anything but valid ID characters. */
+/** Sanitize the Place IDs form: trim, drop blanks/placeholders/unknown slugs. */
 function erf_sanitize_place_ids( $input ) {
     $clean = [];
+    $known = erf_get_location_defaults();
     if ( is_array( $input ) ) {
         foreach ( $input as $slug => $id ) {
             $slug = sanitize_key( $slug );
             $id   = trim( sanitize_text_field( $id ) );
-            // Don't store leftover placeholders or blanks.
-            if ( $id === '' || strpos( $id, '__' ) !== false ) {
+            // Skip blanks, leftover placeholders, and slugs no longer in the
+            // location list (keeps the option clean after a location rename).
+            if ( $id === '' || strpos( $id, '__' ) !== false || ! array_key_exists( $slug, $known ) ) {
                 continue;
             }
             $clean[ $slug ] = $id;

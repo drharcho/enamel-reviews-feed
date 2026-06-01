@@ -171,8 +171,13 @@ function erf_lookup_place_ids() {
     $report   = [];
 
     foreach ( erf_get_location_defaults() as $slug => $loc ) {
-        $city  = ( $slug === 'mckinney' ) ? 'McKinney, TX' : 'Austin, TX';
-        $query = 'Enamel Dentistry ' . $loc['label'] . ', ' . $city;
+        // Use the full street address when available — far more precise than
+        // name alone (avoids matching the wrong nearby studio).
+        if ( ! empty( $loc['address'] ) ) {
+            $query = 'Enamel Dentistry ' . $loc['label'] . ', ' . $loc['address'];
+        } else {
+            $query = 'Enamel Dentistry ' . $loc['label'] . ', Austin, TX';
+        }
 
         $url = add_query_arg(
             [
