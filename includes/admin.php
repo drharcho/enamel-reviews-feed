@@ -245,8 +245,15 @@ function erf_admin_page() {
         <h2 class="title">5. Widget Copy</h2>
         <p>
             Edit the headline, lede, booking URL, and Google listing URL the widget shows for each context.
-            The <strong>data-location</strong> attribute on the Elementor HTML widget chooses which set of copy gets used.
         </p>
+        <div class="notice notice-info inline" style="margin:8px 0;padding:10px 14px;">
+            <p style="margin:0 0 6px;"><strong>To place the reviews block on a page, use the shortcode</strong> (Elementor → Shortcode widget, or any content area):</p>
+            <p style="margin:0;">
+                <code>[enamel_reviews]</code> — generic / all studios &nbsp;·&nbsp;
+                <code>[enamel_reviews location="south-lamar"]</code> — a specific studio.
+            </p>
+            <p style="margin:6px 0 0;">Valid <code>location</code> values: <code><?php echo esc_html( implode( '</code>, <code>', array_keys( erf_get_location_defaults() ) ) ); ?></code></p>
+        </div>
 
         <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
             <input type="hidden" name="action" value="erf_save_copy">

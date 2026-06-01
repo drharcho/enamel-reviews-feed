@@ -1,26 +1,42 @@
-<!-- =========================================================
-     ENAMEL DENTISTRY — PATIENT REVIEWS (HTML-widget fallback)
+<?php
+/**
+ * Enamel Reviews Feed — Shortcode
+ *
+ *   [enamel_reviews]                         → generic / all studios
+ *   [enamel_reviews location="south-lamar"]  → a specific studio
+ *
+ * Drop it into an Elementor "Shortcode" widget, a Shortcoder block, a
+ * Gutenberg shortcode block, or any content area. The plugin's enqueued
+ * JS (enamel-reviews-widget.js) binds the rendered section and fills it
+ * with the right per-location reviews. CSS/JS/config are already loaded
+ * site-wide by the plugin, so the shortcode only needs to emit markup.
+ */
 
-     ⭐ EASIEST METHOD: use the shortcode instead of this file —
-        [enamel_reviews location="south-lamar"]
-        Drop it into an Elementor "Shortcode" widget. No HTML to paste.
+defined( 'ABSPATH' ) || exit;
 
-     This HTML snippet is only for contexts where a shortcode isn't
-     convenient. Paste it into an Elementor HTML widget and set the
-     data-location attribute on the <section> below (e.g. "south-lamar").
-     No <script> needed — the plugin's enqueued binder populates it.
+add_shortcode( 'enamel_reviews', 'erf_reviews_shortcode' );
 
-     The plugin auto-fills the headline, lede, booking URL, Google URL,
-     and the right reviews based on data-location. Edit those in
-     WP Admin → Settings → Enamel Reviews.
+function erf_reviews_shortcode( $atts ) {
+    $atts = shortcode_atts(
+        [ 'location' => '' ],
+        $atts,
+        'enamel_reviews'
+    );
 
-     REQUIRES: "Enamel Reviews Feed" plugin must be activated.
-     ========================================================= -->
+    // Sanitize to a slug; empty string = generic. Validate against known
+    // locations so a typo falls back to generic rather than rendering blank.
+    $slug = sanitize_key( $atts['location'] );
+    if ( $slug !== '' && ! array_key_exists( $slug, erf_get_location_defaults() ) ) {
+        $slug = '';
+    }
 
-<section class="ed-rv" data-location="" aria-labelledby="ed-rv-title">
+    $loc = esc_attr( $slug );
+
+    // The markup mirrors widget-templates/widget.html (binder fills the rest).
+    return <<<HTML
+<section class="ed-rv" data-location="{$loc}" aria-labelledby="ed-rv-title">
   <div class="ed-rv__wrap">
 
-    <!-- Featured postcard (left) -->
     <article class="ed-rv__featured" data-role="featured" aria-live="polite" aria-atomic="false" aria-label="Featured patient review">
       <span class="ed-rv__featured-pin">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -49,7 +65,6 @@
       </div>
     </article>
 
-    <!-- Eyebrow + headline + stat strip + lede + CTAs (right) -->
     <div class="ed-rv__side">
       <div class="ed-rv-eyebrow">
         <strong data-role="agg-total-rounded">4,000+</strong> Reviews
@@ -80,12 +95,9 @@
       </div>
     </div>
 
-    <!-- 4-up mini grid (row 2) -->
     <div class="ed-rv__grid" data-role="grid" aria-live="polite" aria-atomic="false" role="list" aria-label="More patient reviews"></div>
 
   </div>
 </section>
-
-<!-- No inline <script> needed: the plugin's enqueued binder
-     (assets/enamel-reviews-widget.js) finds this .ed-rv section and
-     populates it automatically. -->
+HTML;
+}

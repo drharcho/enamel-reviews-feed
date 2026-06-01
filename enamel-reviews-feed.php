@@ -3,7 +3,7 @@
  * Plugin Name:       Enamel Reviews Feed
  * Plugin URI:        https://enameldentistry.com
  * Description:       Fetches Google Places reviews for all Enamel studios once daily and writes static JSON feeds consumed by the patient reviews Elementor widget. No client-side API key exposure.
- * Version:           1.1.3
+ * Version:           1.2.0
  * Author:            Enamel Dentistry
  * License:           Proprietary
  * Text Domain:       enamel-reviews-feed
@@ -27,7 +27,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ERF_VERSION',  '1.1.3' );
+define( 'ERF_VERSION',  '1.2.0' );
 define( 'ERF_DIR',      plugin_dir_path( __FILE__ ) );
 define( 'ERF_URL',      plugin_dir_url( __FILE__ ) );
 define( 'ERF_FEED_DIR', WP_CONTENT_DIR . '/uploads/enamel/' );
@@ -35,6 +35,7 @@ define( 'ERF_FEED_DIR', WP_CONTENT_DIR . '/uploads/enamel/' );
 require_once ERF_DIR . 'includes/location-config.php';
 require_once ERF_DIR . 'includes/cron.php';
 require_once ERF_DIR . 'includes/admin.php';
+require_once ERF_DIR . 'includes/shortcode.php';
 
 /* ------------------------------------------------------------------
  * Version-sync guard
@@ -145,6 +146,16 @@ function erf_enqueue() {
         [],
         ERF_VERSION,
         true // load in footer
+    );
+
+    // Binder: turns any .ed-rv section (from the [enamel_reviews] shortcode
+    // or an HTML widget) into a live, populated reviews block.
+    wp_enqueue_script(
+        'enamel-reviews-widget',
+        ERF_URL . 'assets/enamel-reviews-widget.js',
+        [ 'enamel-reviews-api' ],
+        ERF_VERSION,
+        true
     );
 
     // Inject window.ENAMEL_LOCATIONS so the universal widget can look up
