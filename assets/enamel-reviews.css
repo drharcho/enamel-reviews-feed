@@ -30,20 +30,32 @@
   --ed-line: #E6E1F3;
   --ed-line-2: #D4CDE6;
 
+  /* Light-on-dark text tokens (section sits on dark purple) */
+  --ed-on-dark:       #FFFFFF;
+  --ed-on-dark-soft:  #D4CDE6;
+  --ed-on-dark-muted: #9A92B4;
+  --ed-accent-light:  #C9B8F0;
+
   --rv-font-display: 'Montserrat', system-ui, -apple-system, sans-serif;
   --rv-font-body: 'Rubik', system-ui, -apple-system, sans-serif;
   --rv-shadow-sm: 0 2px 8px rgba(35, 25, 66, 0.08);
   --rv-shadow-md: 0 10px 28px rgba(35, 25, 66, 0.10);
-  --rv-shadow-lg: 0 30px 80px rgba(35, 25, 66, 0.14);
+  --rv-shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.35);
 
   font-family: var(--rv-font-body);
-  color: var(--ed-ink);
-  background: var(--ed-lavender);
+  color: var(--ed-on-dark);
+  background: var(--ed-dark-purple);
   position: relative;
   overflow: hidden;
+
+  /* Full-bleed: stretch edge-to-edge even inside a boxed Elementor column,
+     so there are no page-background gaps on either side. */
+  width: auto;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
 }
 .ed-rv *, .ed-rv *::before, .ed-rv *::after { box-sizing: border-box; }
-.ed-rv h2, .ed-rv h3 { font-family: var(--rv-font-display); color: var(--ed-dark-purple); margin: 0; }
+.ed-rv h2, .ed-rv h3 { font-family: var(--rv-font-display); color: var(--ed-on-dark); margin: 0; }
 .ed-rv a { text-decoration: none; }
 
 /* Layout wrap ---------------------------------------------------------- */
@@ -77,9 +89,9 @@
   font-size: 13px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ed-bright-purple-700); /* a11y: was --ed-bright-purple (4.34:1) — 700 shade is 8.5:1 on lavender */
+  color: var(--ed-accent-light); /* light lavender — reads on the dark section */
 }
-.ed-rv-eyebrow strong { font-weight: 800; color: var(--ed-bright-purple-700); }
+.ed-rv-eyebrow strong { font-weight: 800; color: var(--ed-on-dark); }
 
 /* Buttons. NOTE: !important is deliberate here — these are <a> elements, and
    host themes (Elementor global link styles, etc.) frequently override link
@@ -102,15 +114,16 @@
   text-decoration: none !important;
   transition: transform 120ms ease, background 120ms ease, color 120ms ease, box-shadow 120ms ease;
 }
+/* On the dark section: primary = solid white (pops), ghost = white outline. */
 .ed-rv-btn--primary,
 .ed-rv-btn--primary:link,
-.ed-rv-btn--primary:visited { background: var(--ed-dark-purple) !important; color: #fff !important; }
-.ed-rv-btn--primary * { color: #fff !important; }
-.ed-rv-btn--primary svg { stroke: #fff !important; }
+.ed-rv-btn--primary:visited { background: #fff !important; color: var(--ed-dark-purple) !important; }
+.ed-rv-btn--primary * { color: var(--ed-dark-purple) !important; }
+.ed-rv-btn--primary svg { stroke: var(--ed-dark-purple) !important; }
 .ed-rv-btn--primary:hover,
 .ed-rv-btn--primary:focus-visible {
-  background: var(--ed-dark-purple-800) !important;
-  color: #fff !important;
+  background: var(--ed-lavender) !important;
+  color: var(--ed-dark-purple) !important;
   transform: translateY(-1px);
   box-shadow: var(--rv-shadow-md);
 }
@@ -118,14 +131,17 @@
 .ed-rv-btn--ghost:link,
 .ed-rv-btn--ghost:visited {
   background: transparent !important;
-  color: var(--ed-dark-purple) !important;
-  box-shadow: inset 0 0 0 1.5px var(--ed-dark-purple);
+  color: #fff !important;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.55);
 }
+.ed-rv-btn--ghost * { color: #fff !important; }
 .ed-rv-btn--ghost:hover,
 .ed-rv-btn--ghost:focus-visible {
-  background: var(--ed-dark-purple) !important;
-  color: #fff !important;
+  background: #fff !important;
+  color: var(--ed-dark-purple) !important;
+  box-shadow: inset 0 0 0 1.5px #fff;
 }
+.ed-rv-btn--ghost:hover * { color: var(--ed-dark-purple) !important; }
 .ed-rv-btn:focus-visible {
   outline: 3px solid var(--ed-orange);
   outline-offset: 3px;
@@ -264,14 +280,14 @@
   font-size: clamp(40px, 4.6vw, 56px);
   line-height: 1.0;
   letter-spacing: -0.025em;
-  color: var(--ed-dark-purple);
+  color: var(--ed-on-dark);
   text-wrap: balance;
   margin: 4px 0 0;
 }
 .ed-rv__title em {
   font-style: italic;
   font-weight: 500;
-  color: var(--ed-bright-purple);
+  color: var(--ed-accent-light);
 }
 
 .ed-rv__statline {
@@ -281,30 +297,31 @@
   gap: 10px 14px;
   font-family: var(--rv-font-display);
   font-size: 14px;
-  color: var(--ed-ink-2);
+  color: var(--ed-on-dark-soft);
   margin-top: 4px;
 }
-.ed-rv__statline-num { font-weight: 700; color: var(--ed-dark-purple); }
+.ed-rv__statline .ed-rv-stars { color: #F5B400; } /* brighter gold on the dark bg */
+.ed-rv__statline-num { font-weight: 700; color: var(--ed-on-dark); }
 .ed-rv__statline-num strong { font-size: 18px; font-weight: 800; }
-.ed-rv__statline-sep { color: var(--ed-ink-3); }
+.ed-rv__statline-sep { color: var(--ed-on-dark-muted); }
 .ed-rv__statline-google {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-weight: 500;
-  color: var(--ed-ink-2);
+  color: var(--ed-on-dark-soft);
 }
 
 .ed-rv__lede {
   font-family: var(--rv-font-body);
   font-size: 17px;
   line-height: 1.6;
-  color: var(--ed-ink-2);
+  color: var(--ed-on-dark-soft);
   margin: 4px 0 0;
   max-width: 46ch;
   text-wrap: pretty;
 }
-.ed-rv__lede strong { color: var(--ed-dark-purple); font-weight: 700; }
+.ed-rv__lede strong { color: var(--ed-on-dark); font-weight: 700; }
 
 .ed-rv__cta {
   display: flex;
