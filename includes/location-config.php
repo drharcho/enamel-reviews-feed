@@ -151,18 +151,27 @@ function erf_get_locations() {
     $place_ids = get_option( 'erf_place_ids', [] );
 
     foreach ( $defaults as $slug => &$loc ) {
-        // Copy overrides (booking URL, headline, lede, etc.)
+        // 1. Place ID override (entered in WP Admin → Settings → Enamel Reviews).
+        //    Replaces the PHP placeholder so no code edit is ever needed.
+        if ( ! empty( $place_ids[ $slug ] ) ) {
+            $loc['place_id'] = $place_ids[ $slug ];
+        }
+
+        // 2. Derive the "Read all on Google" link from the resolved Place ID
+        //    so it points at the studio's Google Maps / Business listing
+        //    (where reviews are read). Auto-stays-correct if a Place ID changes.
+        if ( ! empty( $loc['place_id'] ) && strpos( $loc['place_id'], '__' ) === false ) {
+            $loc['google_url'] = 'https://www.google.com/maps/place/?q=place_id:' . rawurlencode( $loc['place_id'] );
+        }
+
+        // 3. Admin copy overrides last, so a manually-set Google/booking URL
+        //    (Settings → Widget Copy) always wins over the derived default.
         if ( ! empty( $overrides[ $slug ] ) && is_array( $overrides[ $slug ] ) ) {
             foreach ( erf_editable_fields() as $field ) {
                 if ( isset( $overrides[ $slug ][ $field ] ) && $overrides[ $slug ][ $field ] !== '' ) {
                     $loc[ $field ] = $overrides[ $slug ][ $field ];
                 }
             }
-        }
-        // Place ID override (entered in WP Admin → Settings → Enamel Reviews).
-        // Replaces the PHP placeholder so no code edit is ever needed.
-        if ( ! empty( $place_ids[ $slug ] ) ) {
-            $loc['place_id'] = $place_ids[ $slug ];
         }
     }
     unset( $loc );
