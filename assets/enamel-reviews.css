@@ -81,37 +81,50 @@
 }
 .ed-rv-eyebrow strong { font-weight: 800; color: var(--ed-bright-purple-700); }
 
+/* Buttons. NOTE: !important is deliberate here — these are <a> elements, and
+   host themes (Elementor global link styles, etc.) frequently override link
+   color/size with high specificity, which made the primary button's text
+   render dark-on-dark (invisible). The !important rules keep the widget's
+   buttons correct no matter the surrounding theme. */
 .ed-rv-btn {
   display: inline-flex;
   align-items: center;
   gap: 10px;
   font-family: var(--rv-font-display);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 14px !important;
+  line-height: 1.2 !important;
   padding: 14px 22px;
   min-height: 44px; /* a11y: guaranteed 44px touch target (2.5.5) */
   border-radius: 999px;
   border: 0;
   cursor: pointer;
-  text-decoration: none;
+  text-decoration: none !important;
   transition: transform 120ms ease, background 120ms ease, color 120ms ease, box-shadow 120ms ease;
 }
-.ed-rv-btn--primary { background: var(--ed-dark-purple); color: #fff; }
+.ed-rv-btn--primary,
+.ed-rv-btn--primary:link,
+.ed-rv-btn--primary:visited { background: var(--ed-dark-purple) !important; color: #fff !important; }
+.ed-rv-btn--primary * { color: #fff !important; }
+.ed-rv-btn--primary svg { stroke: #fff !important; }
 .ed-rv-btn--primary:hover,
 .ed-rv-btn--primary:focus-visible {
-  background: var(--ed-dark-purple-800);
+  background: var(--ed-dark-purple-800) !important;
+  color: #fff !important;
   transform: translateY(-1px);
   box-shadow: var(--rv-shadow-md);
 }
-.ed-rv-btn--ghost {
-  background: transparent;
-  color: var(--ed-dark-purple);
+.ed-rv-btn--ghost,
+.ed-rv-btn--ghost:link,
+.ed-rv-btn--ghost:visited {
+  background: transparent !important;
+  color: var(--ed-dark-purple) !important;
   box-shadow: inset 0 0 0 1.5px var(--ed-dark-purple);
 }
 .ed-rv-btn--ghost:hover,
 .ed-rv-btn--ghost:focus-visible {
-  background: var(--ed-dark-purple);
-  color: #fff;
+  background: var(--ed-dark-purple) !important;
+  color: #fff !important;
 }
 .ed-rv-btn:focus-visible {
   outline: 3px solid var(--ed-orange);
