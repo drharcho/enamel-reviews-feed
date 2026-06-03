@@ -108,7 +108,7 @@
   line-height: 1.2 !important;
   padding: 14px 22px;
   min-height: 44px; /* a11y: guaranteed 44px touch target (2.5.5) */
-  border-radius: 999px;
+  border-radius: 12px; /* match site hero buttons (rounded rectangle, not pill) */
   border: 0;
   cursor: pointer;
   text-decoration: none !important;
