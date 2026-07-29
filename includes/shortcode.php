@@ -118,6 +118,14 @@ HTML;
  * block is already in the markup and erf_reviews_schema_jsonld() de-dupes
  * per slug, so the injector adds nothing for them.
  */
+// Preferred path: WP Rocket hands plugins the final HTML (before caching and
+// optimization) through this filter — the reliable way to modify output on
+// anonymous requests, where Rocket's own buffering supersedes nested buffers.
+add_filter( 'rocket_buffer', 'erf_schema_inject', 200 );
+
+// Fallback for requests WP Rocket doesn't buffer (logged-in users) or if the
+// caching plugin is ever removed. erf_reviews_schema_jsonld()'s per-request
+// dedup guarantees the two paths never double-emit.
 add_action( 'template_redirect', 'erf_schema_start_buffer', 2 );
 function erf_schema_start_buffer() {
     if ( is_admin() || is_feed() || is_embed()
