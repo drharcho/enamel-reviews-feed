@@ -108,28 +108,43 @@ HTML;
  * Pasted-HTML embeds (an Elementor HTML widget holding widget-templates/
  * widget.html) never run the shortcode, so no PHP prints their schema — and
  * the site's delay-JS keeps the JS fallback from ever reaching crawlers.
- * This filter spots those sections in the rendered content and appends the
- * same server-side JSON-LD. Shortcode embeds are unaffected: their block is
- * already in the markup and erf_reviews_schema_jsonld() de-dupes per slug.
+ *
+ * This footer hook inspects the page's STORED content (post_content plus
+ * Elementor's _elementor_data meta, where HTML-widget markup actually lives)
+ * for .ed-rv sections and prints the same server-side JSON-LD before </body>.
+ * Reading stored content sidesteps Elementor's render path entirely — no
+ * reliance on the_content filters or loop state. Shortcode embeds are
+ * unaffected: their block is already in the markup and
+ * erf_reviews_schema_jsonld() de-dupes per slug.
  */
-add_filter( 'the_content', 'erf_schema_for_pasted_widgets', 999 );
-function erf_schema_for_pasted_widgets( $content ) {
-    // Only the main rendered content of a singular page — never excerpts,
-    // meta-description builders, or secondary loops.
-    if ( ! is_singular() || ! in_the_loop() || ! is_main_query() ) {
-        return $content;
+add_action( 'wp_footer', 'erf_schema_for_pasted_widgets' );
+function erf_schema_for_pasted_widgets() {
+    if ( ! is_singular() ) {
+        return;
     }
-    if ( strpos( $content, 'class="ed-rv"' ) === false ) {
-        return $content;
+    $post = get_post();
+    if ( ! $post ) {
+        return;
     }
-    if ( ! preg_match_all( '/<section[^>]*class="ed-rv"[^>]*>/', $content, $tags ) ) {
-        return $content;
+
+    $haystack = (string) $post->post_content;
+    $edata    = get_post_meta( $post->ID, '_elementor_data', true );
+    if ( is_string( $edata ) && $edata !== '' ) {
+        $haystack .= "\n" . $edata;
     }
+    if ( strpos( $haystack, 'ed-rv' ) === false ) {
+        return;
+    }
+
+    // data-location="slug" as raw HTML, or data-location=\"slug\" inside
+    // Elementor's JSON-encoded widget markup.
+    preg_match_all( '/data-location=\\\\?"([a-z0-9\-]*)\\\\?"/', $haystack, $m );
+    $slugs = $m[1] ? $m[1] : [ '' ]; // ed-rv present but no attr → generic
 
     $known = erf_get_location_defaults();
     $seen  = [];
-    foreach ( $tags[0] as $tag ) {
-        $slug = preg_match( '/data-location="([^"]*)"/', $tag, $m ) ? sanitize_key( $m[1] ) : '';
+    foreach ( $slugs as $slug ) {
+        $slug = sanitize_key( $slug );
         if ( $slug !== '' && ! array_key_exists( $slug, $known ) ) {
             $slug = ''; // unknown slug renders as generic, mirror that
         }
@@ -137,9 +152,8 @@ function erf_schema_for_pasted_widgets( $content ) {
             continue;
         }
         $seen[ $slug ] = true;
-        $content      .= erf_reviews_schema_jsonld( $slug );
+        echo erf_reviews_schema_jsonld( $slug ); // phpcs:ignore WordPress.Security.EscapeOutput -- JSON-LD script tag built with wp_json_encode/esc_attr
     }
-    return $content;
 }
 
 /**
