@@ -109,42 +109,38 @@ HTML;
  * widget.html) never run the shortcode, so no PHP prints their schema — and
  * the site's delay-JS keeps the JS fallback from ever reaching crawlers.
  *
- * This footer hook inspects the page's STORED content (post_content plus
- * Elementor's _elementor_data meta, where HTML-widget markup actually lives)
- * for .ed-rv sections and prints the same server-side JSON-LD before </body>.
- * Reading stored content sidesteps Elementor's render path entirely — no
- * reliance on the_content filters or loop state. Shortcode embeds are
- * unaffected: their block is already in the markup and
- * erf_reviews_schema_jsonld() de-dupes per slug.
+ * An output buffer scans the FINAL rendered HTML — the exact bytes a crawler
+ * receives — for .ed-rv sections and injects the JSON-LD before </body>.
+ * Works no matter which Elementor construct produced the section (HTML
+ * widget, template, global widget). Nests inside WP Rocket's page-cache
+ * buffer (started far earlier in advanced-cache.php), so the injected schema
+ * is also what gets page-cached. Shortcode embeds are unaffected: their
+ * block is already in the markup and erf_reviews_schema_jsonld() de-dupes
+ * per slug, so the injector adds nothing for them.
  */
-add_action( 'wp_footer', 'erf_schema_for_pasted_widgets' );
-function erf_schema_for_pasted_widgets() {
-    if ( ! is_singular() ) {
+add_action( 'template_redirect', 'erf_schema_start_buffer', 2 );
+function erf_schema_start_buffer() {
+    if ( is_admin() || is_feed() || is_embed()
+        || ( defined( 'DOING_AJAX' ) && DOING_AJAX )
+        || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
         return;
     }
-    $post = get_post();
-    if ( ! $post ) {
-        return;
-    }
+    ob_start( 'erf_schema_inject' );
+}
 
-    $haystack = (string) $post->post_content;
-    $edata    = get_post_meta( $post->ID, '_elementor_data', true );
-    if ( is_string( $edata ) && $edata !== '' ) {
-        $haystack .= "\n" . $edata;
+function erf_schema_inject( $html ) {
+    if ( strpos( $html, 'class="ed-rv"' ) === false || strpos( $html, '</body>' ) === false ) {
+        return $html;
     }
-    if ( strpos( $haystack, 'ed-rv' ) === false ) {
-        return;
+    if ( ! preg_match_all( '/<section[^>]*class="ed-rv"[^>]*>/', $html, $tags ) ) {
+        return $html;
     }
-
-    // data-location="slug" as raw HTML, or data-location=\"slug\" inside
-    // Elementor's JSON-encoded widget markup.
-    preg_match_all( '/data-location=\\\\?"([a-z0-9\-]*)\\\\?"/', $haystack, $m );
-    $slugs = $m[1] ? $m[1] : [ '' ]; // ed-rv present but no attr → generic
 
     $known = erf_get_location_defaults();
     $seen  = [];
-    foreach ( $slugs as $slug ) {
-        $slug = sanitize_key( $slug );
+    $out   = '';
+    foreach ( $tags[0] as $tag ) {
+        $slug = preg_match( '/data-location="([^"]*)"/', $tag, $m ) ? sanitize_key( $m[1] ) : '';
         if ( $slug !== '' && ! array_key_exists( $slug, $known ) ) {
             $slug = ''; // unknown slug renders as generic, mirror that
         }
@@ -152,8 +148,14 @@ function erf_schema_for_pasted_widgets() {
             continue;
         }
         $seen[ $slug ] = true;
-        echo erf_reviews_schema_jsonld( $slug ); // phpcs:ignore WordPress.Security.EscapeOutput -- JSON-LD script tag built with wp_json_encode/esc_attr
+        $out          .= erf_reviews_schema_jsonld( $slug );
     }
+    if ( $out === '' ) {
+        return $html;
+    }
+
+    $pos = strrpos( $html, '</body>' );
+    return substr( $html, 0, $pos ) . $out . substr( $html, $pos );
 }
 
 /**
