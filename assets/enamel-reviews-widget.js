@@ -136,7 +136,6 @@
       '@context': 'https://schema.org',
       '@type': 'Dentist',
       name: 'Enamel Dentistry' + (slug ? ' ' + cfg.label : ''),
-      url: location.href.split('#')[0],
       aggregateRating: {
         '@type': 'AggregateRating',
         ratingValue: agg.rating,
@@ -155,6 +154,14 @@
         return item;
       })
     };
+
+    if (slug) {
+      // Same @id as the page's hand-built Dentist entity so parsers merge
+      // our rating + reviews into it rather than duplicating the business.
+      schema['@id'] = location.origin + location.pathname + '#dentist';
+    } else {
+      schema.url = location.origin + location.pathname;
+    }
 
     var tag = document.createElement('script');
     tag.type = 'application/ld+json';

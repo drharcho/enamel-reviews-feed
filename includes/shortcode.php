@@ -105,6 +105,44 @@ HTML;
 }
 
 /**
+ * Pasted-HTML embeds (an Elementor HTML widget holding widget-templates/
+ * widget.html) never run the shortcode, so no PHP prints their schema — and
+ * the site's delay-JS keeps the JS fallback from ever reaching crawlers.
+ * This filter spots those sections in the rendered content and appends the
+ * same server-side JSON-LD. Shortcode embeds are unaffected: their block is
+ * already in the markup and erf_reviews_schema_jsonld() de-dupes per slug.
+ */
+add_filter( 'the_content', 'erf_schema_for_pasted_widgets', 999 );
+function erf_schema_for_pasted_widgets( $content ) {
+    // Only the main rendered content of a singular page — never excerpts,
+    // meta-description builders, or secondary loops.
+    if ( ! is_singular() || ! in_the_loop() || ! is_main_query() ) {
+        return $content;
+    }
+    if ( strpos( $content, 'class="ed-rv"' ) === false ) {
+        return $content;
+    }
+    if ( ! preg_match_all( '/<section[^>]*class="ed-rv"[^>]*>/', $content, $tags ) ) {
+        return $content;
+    }
+
+    $known = erf_get_location_defaults();
+    $seen  = [];
+    foreach ( $tags[0] as $tag ) {
+        $slug = preg_match( '/data-location="([^"]*)"/', $tag, $m ) ? sanitize_key( $m[1] ) : '';
+        if ( $slug !== '' && ! array_key_exists( $slug, $known ) ) {
+            $slug = ''; // unknown slug renders as generic, mirror that
+        }
+        if ( isset( $seen[ $slug ] ) ) {
+            continue;
+        }
+        $seen[ $slug ] = true;
+        $content      .= erf_reviews_schema_jsonld( $slug );
+    }
+    return $content;
+}
+
+/**
  * Server-rendered JSON-LD (Dentist → AggregateRating + Review list) matching
  * the reviews the widget displays. Emitted inline with the shortcode markup
  * so crawlers that do not execute JavaScript (most AI/LLM crawlers) still see
@@ -137,25 +175,19 @@ function erf_reviews_schema_jsonld( $slug ) {
         return '';
     }
 
+    $page_url = get_permalink() ? get_permalink() : home_url( '/' );
+
     if ( $slug === '' ) {
-        $name    = 'Enamel Dentistry';
-        $address = '';
-        $same_as = '';
+        $name = 'Enamel Dentistry';
     } else {
         $locations = erf_get_locations();
-        $loc       = $locations[ $slug ];
-        $name      = 'Enamel Dentistry ' . $loc['label'];
-        $address   = isset( $loc['address'] ) ? $loc['address'] : '';
-        // sameAs only when it points at a real Google listing, not the
-        // generic search-results fallback URL.
-        $same_as   = ( strpos( $loc['google_url'], 'google.com/search' ) === false ) ? $loc['google_url'] : '';
+        $name      = 'Enamel Dentistry ' . $locations[ $slug ]['label'];
     }
 
     $schema = [
         '@context' => 'https://schema.org',
         '@type'    => 'Dentist',
         'name'     => $name,
-        'url'      => get_permalink() ? get_permalink() : home_url( '/' ),
         'aggregateRating' => [
             '@type'       => 'AggregateRating',
             'ratingValue' => $rating,
@@ -166,11 +198,17 @@ function erf_reviews_schema_jsonld( $slug ) {
             'worstRating' => 1,
         ],
     ];
-    if ( $address !== '' ) {
-        $schema['address'] = $address;
-    }
-    if ( $same_as !== '' ) {
-        $schema['sameAs'] = $same_as;
+
+    if ( $slug !== '' ) {
+        // Location pages carry a hand-built Dentist entity with
+        // @id "<permalink>#dentist" (phone, geo, hours, insurers). Using the
+        // same @id makes parsers MERGE our rating + reviews into that entity
+        // instead of creating a duplicate LocalBusiness. On pages without it,
+        // this node stands alone as the entity. Address/sameAs/url are left
+        // to the hand-built block to avoid conflicting merged values.
+        $schema['@id'] = $page_url . '#dentist';
+    } else {
+        $schema['url'] = $page_url;
     }
 
     // Mirror the widget's display filters so the marked-up reviews are the
