@@ -58,6 +58,21 @@ fields:
 Save and refresh any page. No code changes, no Elementor edits, no risk of
 pages drifting out of sync.
 
+## Structured data (AggregateRating schema)
+
+Both embed paths emit `Dentist` → `AggregateRating` + `Review` JSON-LD built
+from the real fetched feed (never from sample fallback data):
+
+- **`[enamel_reviews]` shortcode (preferred):** schema is rendered
+  server-side in PHP, so crawlers that don't execute JavaScript (most
+  AI/LLM crawlers — GPTBot, ClaudeBot, PerplexityBot) can read it from the
+  raw HTML.
+- **Pasted `widget.html`:** schema is injected by JS after the feed loads.
+  Googlebot (which renders JS) sees it; non-JS crawlers do not.
+
+If the feed hasn't been fetched yet, no schema is emitted at all.
+Verify after deploy: https://search.google.com/test/rich-results
+
 ## Multiple widgets on the same page
 
 Supported. Each `<section class="ed-rv">` gets its own `data-bound` flag and

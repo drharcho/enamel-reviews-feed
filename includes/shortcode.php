@@ -30,7 +30,8 @@ function erf_reviews_shortcode( $atts ) {
         $slug = '';
     }
 
-    $loc = esc_attr( $slug );
+    $loc    = esc_attr( $slug );
+    $schema = erf_reviews_schema_jsonld( $slug );
 
     // The markup mirrors widget-templates/widget.html (binder fills the rest).
     return <<<HTML
@@ -98,6 +99,119 @@ function erf_reviews_shortcode( $atts ) {
     <div class="ed-rv__grid" data-role="grid" aria-live="polite" aria-atomic="false" role="list" aria-label="More patient reviews"></div>
 
   </div>
+  {$schema}
 </section>
 HTML;
+}
+
+/**
+ * Server-rendered JSON-LD (Dentist → AggregateRating + Review list) matching
+ * the reviews the widget displays. Emitted inline with the shortcode markup
+ * so crawlers that do not execute JavaScript (most AI/LLM crawlers) still see
+ * the rating data the widget only renders visually via JS.
+ *
+ * Built exclusively from the static feed JSON the cron fetched from Google —
+ * never from the bundled sample data. If the feed doesn't exist yet (fresh
+ * install, fetch not run) no schema is emitted at all: an empty block is
+ * better than fabricated numbers.
+ */
+function erf_reviews_schema_jsonld( $slug ) {
+    // One schema block per location per page (the widget can appear twice).
+    static $emitted = [];
+    if ( isset( $emitted[ $slug ] ) ) {
+        return '';
+    }
+
+    $feed_file = $slug === ''
+        ? ERF_FEED_DIR . 'enamel-reviews.json'
+        : ERF_FEED_DIR . 'enamel-reviews-' . $slug . '.json';
+
+    if ( ! is_readable( $feed_file ) ) {
+        return '';
+    }
+
+    $data   = json_decode( (string) file_get_contents( $feed_file ), true );
+    $rating = isset( $data['aggregate']['rating'] ) ? (float) $data['aggregate']['rating'] : 0;
+    $total  = isset( $data['aggregate']['total'] )  ? (int) $data['aggregate']['total']    : 0;
+    if ( $rating <= 0 || $total < 1 ) {
+        return '';
+    }
+
+    if ( $slug === '' ) {
+        $name    = 'Enamel Dentistry';
+        $address = '';
+        $same_as = '';
+    } else {
+        $locations = erf_get_locations();
+        $loc       = $locations[ $slug ];
+        $name      = 'Enamel Dentistry ' . $loc['label'];
+        $address   = isset( $loc['address'] ) ? $loc['address'] : '';
+        // sameAs only when it points at a real Google listing, not the
+        // generic search-results fallback URL.
+        $same_as   = ( strpos( $loc['google_url'], 'google.com/search' ) === false ) ? $loc['google_url'] : '';
+    }
+
+    $schema = [
+        '@context' => 'https://schema.org',
+        '@type'    => 'Dentist',
+        'name'     => $name,
+        'url'      => get_permalink() ? get_permalink() : home_url( '/' ),
+        'aggregateRating' => [
+            '@type'       => 'AggregateRating',
+            'ratingValue' => $rating,
+            // ratingCount (not reviewCount): Google's user_ratings_total
+            // includes star-only ratings without review text.
+            'ratingCount' => $total,
+            'bestRating'  => 5,
+            'worstRating' => 1,
+        ],
+    ];
+    if ( $address !== '' ) {
+        $schema['address'] = $address;
+    }
+    if ( $same_as !== '' ) {
+        $schema['sameAs'] = $same_as;
+    }
+
+    // Mirror the widget's display filters so the marked-up reviews are the
+    // same ones a visitor sees on the page (a schema.org/Google requirement).
+    $filters = erf_get_filters();
+    $reviews = array_values( array_filter(
+        isset( $data['reviews'] ) ? $data['reviews'] : [],
+        function ( $r ) use ( $filters ) {
+            return (int) ( $r['rating'] ?? 0 ) >= $filters['minRating']
+                && mb_strlen( $r['text'] ?? '' ) >= $filters['minLength'];
+        }
+    ) );
+    usort( $reviews, function ( $a, $b ) {
+        return ( $b['time'] ?? 0 ) <=> ( $a['time'] ?? 0 );
+    } );
+    $reviews = array_slice( $reviews, 0, 1 + $filters['maxReviews'] ); // featured + grid
+
+    foreach ( $reviews as $r ) {
+        $item = [
+            '@type'  => 'Review',
+            'author' => [ '@type' => 'Person', 'name' => $r['author_name'] ?? 'Enamel Patient' ],
+            'reviewRating' => [
+                '@type'       => 'Rating',
+                'ratingValue' => (int) ( $r['rating'] ?? 5 ),
+                'bestRating'  => 5,
+                'worstRating' => 1,
+            ],
+            'reviewBody' => $r['text'] ?? '',
+        ];
+        if ( ! empty( $r['time'] ) ) {
+            $item['datePublished'] = gmdate( 'Y-m-d', (int) $r['time'] );
+        }
+        $schema['review'][] = $item;
+    }
+
+    $emitted[ $slug ] = true;
+
+    // wp_json_encode escapes "/" so a "</script>" in a review body cannot
+    // break out of the tag. data-erf-schema also tells the widget JS not to
+    // inject its duplicate fallback schema for this location.
+    return '<script type="application/ld+json" data-erf-schema="' . esc_attr( $slug === '' ? 'generic' : $slug ) . '">'
+        . wp_json_encode( $schema )
+        . '</script>';
 }

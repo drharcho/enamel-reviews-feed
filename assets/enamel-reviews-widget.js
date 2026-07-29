@@ -61,7 +61,10 @@
         minLength:   minLength,
         maxReviews:  maxReviews,
         maxFeatured: 1
-      }).then(function (payload) { bindPayload(root, payload, maxReviews); });
+      }).then(function (payload) {
+        bindPayload(root, payload, maxReviews);
+        injectSchema(slug, cfg, payload);
+      });
     });
   }
 
@@ -114,6 +117,50 @@
         + '</div>'
         + '</div>';
     }).join('');
+  }
+
+  /* JSON-LD fallback for the Elementor HTML-widget embed path.
+     The [enamel_reviews] shortcode prints AggregateRating schema server-side
+     (PHP), which even non-JS crawlers can read. When the section arrived
+     without it (pasted widget.html — no PHP ran), inject the same schema from
+     the live feed payload so JS-rendering crawlers (Googlebot) still get it.
+     Never emitted for the bundled sample fallback data (payload.live). */
+  function injectSchema(slug, cfg, payload) {
+    var key = slug || 'generic';
+    if (!payload.live) return;
+    if (document.querySelector('script[data-erf-schema="' + key + '"]')) return;
+    var agg = payload.aggregate || {};
+    if (!(agg.rating > 0) || !(agg.total > 0)) return;
+
+    var schema = {
+      '@context': 'https://schema.org',
+      '@type': 'Dentist',
+      name: 'Enamel Dentistry' + (slug ? ' ' + cfg.label : ''),
+      url: location.href.split('#')[0],
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: agg.rating,
+        ratingCount: agg.total,
+        bestRating: 5,
+        worstRating: 1
+      },
+      review: (payload.featured || []).concat(payload.reviews || []).map(function (r) {
+        var item = {
+          '@type': 'Review',
+          author: { '@type': 'Person', name: r.author_name },
+          reviewRating: { '@type': 'Rating', ratingValue: r.rating, bestRating: 5, worstRating: 1 },
+          reviewBody: r.text
+        };
+        if (r.time) item.datePublished = new Date(r.time * 1000).toISOString().slice(0, 10);
+        return item;
+      })
+    };
+
+    var tag = document.createElement('script');
+    tag.type = 'application/ld+json';
+    tag.setAttribute('data-erf-schema', key);
+    tag.textContent = JSON.stringify(schema);
+    document.head.appendChild(tag);
   }
 
   function roundDown(n) {

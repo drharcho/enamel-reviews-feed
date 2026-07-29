@@ -231,8 +231,19 @@
       const cfg = Object.assign({}, this.config, overrides || {});
 
       try {
-        if (cfg.source === 'places') return await this._loadFromPlaces(cfg);
-        if (cfg.source === 'static') return await this._loadFromStatic(cfg);
+        // `live: true` marks payloads built from real fetched data — the
+        // widget only emits JSON-LD schema for live payloads, never for the
+        // bundled sample fallback below.
+        if (cfg.source === 'places') {
+          const payload = await this._loadFromPlaces(cfg);
+          payload.live = true;
+          return payload;
+        }
+        if (cfg.source === 'static') {
+          const payload = await this._loadFromStatic(cfg);
+          payload.live = true;
+          return payload;
+        }
       } catch (err) {
         console.warn('[EnamelReviews] live load failed, falling back to sample:', err);
       }
