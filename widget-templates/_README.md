@@ -60,18 +60,24 @@ pages drifting out of sync.
 
 ## Structured data (AggregateRating schema)
 
-Both embed paths emit `Dentist` → `AggregateRating` + `Review` JSON-LD built
-from the real fetched feed (never from sample fallback data):
+Both embed paths get `Dentist` → `AggregateRating` + `Review` JSON-LD in the
+**raw server HTML**, built from the real fetched feed (never sample data):
 
-- **`[enamel_reviews]` shortcode (preferred):** schema is rendered
-  server-side in PHP, so crawlers that don't execute JavaScript (most
-  AI/LLM crawlers — GPTBot, ClaudeBot, PerplexityBot) can read it from the
-  raw HTML.
-- **Pasted `widget.html`:** schema is injected by JS after the feed loads.
-  Googlebot (which renders JS) sees it; non-JS crawlers do not.
+- **`[enamel_reviews]` shortcode:** schema renders inline with the markup.
+- **Pasted `widget.html`:** the plugin scans the final rendered page
+  (WP Rocket's `rocket_buffer` filter, plus its own output buffer as
+  fallback) and injects the block before `</body>` — no Elementor edits
+  needed. A `<!-- erf-schema <version>: ... -->` comment near `</body>`
+  records what was emitted, for troubleshooting.
+
+On location pages the block carries `@id: "<page-url>#dentist"` so it MERGES
+into the page's hand-built Dentist entity (adds the rating; no duplicate
+LocalBusiness). The widget JS also injects a copy client-side only if no
+server block exists (and never from sample fallback data).
 
 If the feed hasn't been fetched yet, no schema is emitted at all.
-Verify after deploy: https://search.google.com/test/rich-results
+Verified 2026-07-30: Rich Results Test shows "Review snippets" with the
+merged aggregateRating on /south-lamar-dentist/.
 
 ## Multiple widgets on the same page
 
