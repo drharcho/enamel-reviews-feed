@@ -133,6 +133,9 @@ function erf_schema_start_buffer() {
         || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
         return;
     }
+    // Capture the page URL here, in a normal request context — buffer
+    // callbacks run at shutdown, where get_permalink() may no longer work.
+    $GLOBALS['erf_page_url'] = get_permalink() ? get_permalink() : home_url( add_query_arg( [] ) );
     ob_start( 'erf_schema_inject' );
 }
 
@@ -141,29 +144,39 @@ function erf_schema_inject( $html ) {
         return $html;
     }
     if ( ! preg_match_all( '/<section[^>]*class="ed-rv"[^>]*>/', $html, $tags ) ) {
-        return $html;
+        return $html . '<!-- erf-schema: ed-rv present but section tag not matched -->';
     }
 
     $known = erf_get_location_defaults();
     $seen  = [];
     $out   = '';
+    $log   = [];
     foreach ( $tags[0] as $tag ) {
         $slug = preg_match( '/data-location="([^"]*)"/', $tag, $m ) ? sanitize_key( $m[1] ) : '';
         if ( $slug !== '' && ! array_key_exists( $slug, $known ) ) {
             $slug = ''; // unknown slug renders as generic, mirror that
         }
-        if ( isset( $seen[ $slug ] ) ) {
+        $key = $slug === '' ? 'generic' : $slug;
+        // Stateless dedup against the page itself: covers the shortcode block
+        // already in the markup, a repeated section, and the other injection
+        // path (rocket_buffer vs own buffer) having run first.
+        if ( isset( $seen[ $slug ] ) || strpos( $html, 'data-erf-schema="' . $key . '"' ) !== false ) {
+            $log[] = $key . ':dup';
             continue;
         }
         $seen[ $slug ] = true;
-        $out          .= erf_reviews_schema_jsonld( $slug );
-    }
-    if ( $out === '' ) {
-        return $html;
+        try {
+            $block = erf_reviews_schema_jsonld( $slug );
+            $out  .= $block;
+            $log[] = $key . ':' . ( $block === '' ? 'empty' : strlen( $block ) . 'b' );
+        } catch ( \Throwable $e ) {
+            $log[] = $key . ':err-' . substr( preg_replace( '/[^A-Za-z0-9 _.\-]/', '', $e->getMessage() ), 0, 60 );
+        }
     }
 
-    $pos = strrpos( $html, '</body>' );
-    return substr( $html, 0, $pos ) . $out . substr( $html, $pos );
+    $marker = '<!-- erf-schema ' . ERF_VERSION . ': ' . implode( ' ', $log ) . ' -->';
+    $pos    = strrpos( $html, '</body>' );
+    return substr( $html, 0, $pos ) . $out . $marker . substr( $html, $pos );
 }
 
 /**
@@ -178,12 +191,6 @@ function erf_schema_inject( $html ) {
  * better than fabricated numbers.
  */
 function erf_reviews_schema_jsonld( $slug ) {
-    // One schema block per location per page (the widget can appear twice).
-    static $emitted = [];
-    if ( isset( $emitted[ $slug ] ) ) {
-        return '';
-    }
-
     $feed_file = $slug === ''
         ? ERF_FEED_DIR . 'enamel-reviews.json'
         : ERF_FEED_DIR . 'enamel-reviews-' . $slug . '.json';
@@ -199,7 +206,13 @@ function erf_reviews_schema_jsonld( $slug ) {
         return '';
     }
 
-    $page_url = get_permalink() ? get_permalink() : home_url( '/' );
+    // Prefer the URL captured at template_redirect (buffer callbacks run at
+    // shutdown, where the main query context may be gone).
+    if ( ! empty( $GLOBALS['erf_page_url'] ) ) {
+        $page_url = $GLOBALS['erf_page_url'];
+    } else {
+        $page_url = get_permalink() ? get_permalink() : home_url( '/' );
+    }
 
     if ( $slug === '' ) {
         $name = 'Enamel Dentistry';
